@@ -107,8 +107,9 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
   color: #111; background: linear-gradient(transparent, var(--c) 45%);
   text-transform: uppercase; letter-spacing: 0.04em;
 }
-.card-epic {
-  position: absolute; top: 6px; right: 6px; padding: 2px 7px; border-radius: 999px; font-size: 0.7rem; font-weight: 700;
+.card-badges-right { position: absolute; top: 6px; right: 6px; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.card-epic, .card-avg {
+  padding: 2px 7px; border-radius: 999px; font-size: 0.7rem; font-weight: 700;
   background: #000c; color: var(--accent); border: 1px solid var(--accent);
 }
 .card-body { display: flex; flex-direction: column; padding: 8px 2px 0; gap: 1px; }
@@ -279,3 +280,5 @@ kbd { padding: 1px 6px; border-radius: 4px; background: var(--panel-2); border: 
   background: #f5c518; color: #000; font-weight: 600; box-shadow: 0 1px 4px #0008;
 }
 .card-imdb b { font-weight: 800; }
+
+.card-avg { background: #000c; color: #fff; border: 1px solid #fff6; }

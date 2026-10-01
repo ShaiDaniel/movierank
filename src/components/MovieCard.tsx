@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { VERDICT_BY_ID, tmdbImage } from '../config';
+import { averageScore } from '../filters';
 import type { Movie, Rating, WatchlistEntry } from '../types';
 
 interface Props {
@@ -14,6 +15,8 @@ export function MovieCard({ movie, rating, entry, onOpen }: Props) {
   const verdict = rating?.verdict ? VERDICT_BY_ID[rating.verdict] : null;
   const poster = tmdbImage(movie.poster, 'w342');
   const epic = rating?.scores?.epic;
+  const average = averageScore(rating);
+  const scoreCount = Object.keys(rating?.scores ?? {}).length;
 
   return (
     <button type="button" className="card" onClick={onOpen} style={{ '--c': verdict?.color } as CSSProperties}>
@@ -26,10 +29,19 @@ export function MovieCard({ movie, rating, entry, onOpen }: Props) {
         )}
         {verdict && <span className="card-verdict">{verdict.label}</span>}
         {entry?.priority && <span className={`card-priority priority-badge ${entry.priority}`}>{entry.priority}</span>}
-        {epic !== undefined && epic >= 8 && (
-          <span className="card-epic" title={`Epic ${epic}/10`}>
-            Epic {epic}
-          </span>
+        {((epic !== undefined && epic >= 8) || average !== null) && (
+          <div className="card-badges-right">
+            {epic !== undefined && epic >= 8 && (
+              <span className="card-epic" title={`Epic ${epic}/10`}>
+                Epic {epic}
+              </span>
+            )}
+            {average !== null && (
+              <span className="card-avg" title={`Average of my ${scoreCount} score${scoreCount === 1 ? '' : 's'}`}>
+                Avg {average.toFixed(1)}
+              </span>
+            )}
+          </div>
         )}
       </div>
       <div className="card-body">
