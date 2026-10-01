@@ -2,23 +2,27 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { SCORES, VERDICT_BY_ID, tmdbImage } from '../config';
 import { ADMIN } from '../data';
 import type { PersonRole } from '../filters';
-import type { Movie, Provider, Rating, Ratings } from '../types';
+import type { Movie, Provider, Rating, Ratings, WatchlistEntry } from '../types';
 import { CopyFrom, copyRating } from './CopyFrom';
 import { RatingEditor } from './RatingEditor';
 import { WatchInfo } from './WatchInfo';
+import { WatchlistPanel } from './WatchlistPanel';
 
 interface Props {
   movie: Movie;
   rating?: Rating;
   movies: Movie[];
   ratings: Ratings;
+  /** Set when the movie is opened from the watchlist tab. */
+  entry?: WatchlistEntry;
+  onWatchlistChange?: (update: (prev: WatchlistEntry) => WatchlistEntry) => void;
   onRate: (update: Rating | ((prev: Rating) => Rating)) => void;
   onClose: () => void;
   onStep: (delta: number) => void;
   onPerson: (code: string) => void;
 }
 
-export function MovieModal({ movie, rating, movies, ratings, onRate, onClose, onStep, onPerson }: Props) {
+export function MovieModal({ movie, rating, movies, ratings, entry, onWatchlistChange, onRate, onClose, onStep, onPerson }: Props) {
   const [editing, setEditing] = useState(false);
   const [trailer, setTrailer] = useState(false);
 
@@ -26,7 +30,11 @@ export function MovieModal({ movie, rating, movies, ratings, onRate, onClose, on
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) return;
+      if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) {
+        // First Escape leaves the text box; the next one closes the page.
+        if (e.key === 'Escape') e.target.blur();
+        return;
+      }
       if (e.key === 'Escape') onClose();
       else if (e.key === 'ArrowRight') onStep(1);
       else if (e.key === 'ArrowLeft') onStep(-1);
@@ -108,7 +116,7 @@ export function MovieModal({ movie, rating, movies, ratings, onRate, onClose, on
                     TMDB {movie.tmdbRating ? `★ ${movie.tmdbRating}` : ''}
                   </a>
                 )}
-                {ADMIN && (
+                {ADMIN && !entry && (
                   <button type="button" className="btn primary" onClick={() => setEditing((x) => !x)}>
                     {editing ? 'Done editing' : 'Edit rating'}
                   </button>
@@ -117,6 +125,9 @@ export function MovieModal({ movie, rating, movies, ratings, onRate, onClose, on
             </div>
           </div>
 
+          {entry && onWatchlistChange ? (
+            <WatchlistPanel entry={entry} onChange={onWatchlistChange} />
+          ) : (
           <section className="verdict-panel">
             {editing ? (
               <>
@@ -147,6 +158,7 @@ export function MovieModal({ movie, rating, movies, ratings, onRate, onClose, on
             )}
             <WatchInfo movie={movie} rating={rating} />
           </section>
+          )}
 
           {movie.tagline && <p className="tagline">{movie.tagline}</p>}
           <p>{movie.overview}</p>

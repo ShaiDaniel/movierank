@@ -244,3 +244,32 @@ kbd { padding: 1px 6px; border-radius: 4px; background: var(--panel-2); border: 
 .review-input { resize: vertical; color: var(--text); }
 .review { white-space: pre-wrap; margin: 8px 0 12px; }
 .copy-note { font-size: 0.8rem; color: var(--muted); margin: 0; }
+
+/* Tabs + watchlist */
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+.tab {
+  padding: 8px 16px; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px;
+  cursor: pointer; color: var(--muted); font-weight: 600;
+}
+.tab.active { color: var(--text); border-bottom-color: var(--accent); }
+.tab:hover { color: var(--text); }
+.priority-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.7rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.04em; background: var(--panel-2); border: 1px solid var(--border);
+}
+.priority-badge.high { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+.priority-badge.medium { color: var(--text); }
+.priority-badge.low { color: var(--muted); }
+.card-priority { position: absolute; top: 6px; left: 6px; }
+.watchlist-panel { border-left-color: var(--accent); display: grid; gap: 10px; }
+.watchlist-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.priority-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.remove-link { justify-self: start; color: #f87171; font-size: 0.85rem; }
+.add-dialog { max-width: 640px; }
+.add-dialog .modal-content { padding: 24px; display: grid; gap: 12px; }
+.search-results { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 60vh; overflow-y: auto; }
+.search-results li { display: grid; grid-template-columns: 46px 1fr auto; gap: 12px; align-items: center; }
+.search-results img, .small-poster { width: 46px; height: 69px; object-fit: cover; border-radius: 4px; background: var(--panel-2); }
+.search-text { display: grid; min-width: 0; }
+.search-text .small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.error { color: #f87171; margin: 0; }

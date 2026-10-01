@@ -1,5 +1,8 @@
-// Reads a Trakt export zip and writes data/trakt-movies.json:
-// one entry per movie with every play (watch) and whether its date is a backfill.
+// Reads a Trakt export zip and
+//  - writes data/trakt-movies.json: one entry per movie with every play (watch)
+//    and whether its date is a backfill;
+//  - merges new Trakt watchlist movies into data/watchlist.json. Entries already
+//    there (including ones removed on the site) are never changed.
 //
 // Usage: npm run import:trakt [-- path/to/trakt-export.zip]
 // Without a path, the newest trakt-export-*.zip in the project root is used.
@@ -7,9 +10,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { unzipSync, strFromU8 } from 'fflate';
+import { dataFile, readJsonFile, setEntry } from './store.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
-const OUT = path.join(ROOT, 'data', 'trakt-movies.json');
+const OUT = dataFile('trakt-movies.json');
 
 // Plays before this date are backfills: either the release date Trakt filled in,
 // or the "just now" bulk add of remembered movies on 2017-08-21/22.
@@ -65,3 +69,26 @@ const noTmdb = movies.filter((m) => !m.ids.tmdb);
 console.log(`Imported ${movies.length} movies (${plays} plays) from ${path.basename(zipPath)}`);
 console.log(`  ${backfilled} watched only before tracking started (${TRACKING_START})`);
 if (noTmdb.length) console.log(`  ${noTmdb.length} without TMDB id: ${noTmdb.map((m) => m.title).join(', ')}`);
+
+// --- Watchlist ---------------------------------------------------------------
+const watchlistFile = Object.keys(files).find((name) => /lists-watchlist\.json$/.test(name));
+if (watchlistFile) {
+  const existing = readJsonFile(dataFile('watchlist.json'), {});
+  let added = 0;
+  let skippedWatched = 0;
+  for (const item of JSON.parse(strFromU8(files[watchlistFile]))) {
+    if (item.type !== 'movie' || !item.movie.ids.tmdb) continue;
+    const key = String(item.movie.ids.tmdb);
+    if (key in existing) continue;
+    if (byKey.has(key)) {
+      skippedWatched++;
+      continue;
+    }
+    const entry = { addedAt: item.listed_at, source: 'trakt', title: item.movie.title, year: item.movie.year };
+    if (item.notes) entry.why = item.notes;
+    setEntry('watchlist', key, entry, { by: 'trakt-import' });
+    existing[key] = entry;
+    added++;
+  }
+  console.log(`Watchlist: ${added} new from Trakt${skippedWatched ? `, ${skippedWatched} skipped (already watched)` : ''}`);
+}

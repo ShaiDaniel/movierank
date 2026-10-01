@@ -8,6 +8,7 @@
     "types": ["vite/client", "node"],
     "strict": true,
     "noEmit": true,
+    "allowJs": true,
     "skipLibCheck": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,

@@ -1,5 +1,5 @@
 import { SCORES, VERDICTS } from './config';
-import type { Movie, Rating, ScoreId, VerdictId } from './types';
+import type { Movie, Rating, ScoreId, VerdictId, Watchlist } from './types';
 
 export type VerdictFilter = VerdictId | 'unrated';
 
@@ -21,6 +21,7 @@ export type SortKey =
   | 'title'
   | 'tmdb'
   | 'runtime'
+  | 'added'
   | `score:${ScoreId}`;
 
 export const SORTS: { id: SortKey; label: string }[] = [
@@ -32,6 +33,13 @@ export const SORTS: { id: SortKey; label: string }[] = [
   { id: 'tmdb', label: 'TMDB rating' },
   { id: 'runtime', label: 'Shortest' },
   ...SCORES.map((s) => ({ id: `score:${s.id}` as SortKey, label: `${s.label} score` })),
+];
+
+/** On the watchlist tab, 'rec' means priority order. */
+export const WATCHLIST_SORTS: { id: SortKey; label: string }[] = [
+  { id: 'rec', label: 'Priority' },
+  { id: 'added', label: 'Recently added' },
+  ...SORTS.filter((s) => ['newest', 'oldest', 'title', 'tmdb', 'runtime'].includes(s.id)),
 ];
 
 export interface Filters {
@@ -97,7 +105,7 @@ export function parseFilters(search: string): Filters {
     yearTo: num(p.get('to')),
     watched: p.get('w') ?? 'any',
     stream: list(p.get('s')),
-    sort: sort && SORTS.some((s) => s.id === sort) ? sort : 'rec',
+    sort: sort && [...SORTS, ...WATCHLIST_SORTS].some((s) => s.id === sort) ? sort : 'rec',
   };
 }
 
@@ -151,7 +159,8 @@ export function averageScore(r: Rating | undefined) {
 
 const normalize = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 
-export function applyFilters(movies: Movie[], ratings: Record<string, Rating>, f: Filters): Movie[] {
+/** Pass the watchlist when filtering the watchlist tab (for its sorts and searching "why"). */
+export function applyFilters(movies: Movie[], ratings: Record<string, Rating>, f: Filters, watchlist?: Watchlist): Movie[] {
   const q = normalize(f.q.trim());
   const minEntries = Object.entries(f.min).filter(([, v]) => v) as [ScoreId, number][];
 
@@ -169,22 +178,32 @@ export function applyFilters(movies: Movie[], ratings: Record<string, Rating>, f
     if (/^\d{4}$/.test(f.watched) && !m.plays.some((p) => !p.backfilled && p.at.startsWith(f.watched))) return false;
     if (f.stream.length && !f.stream.some((s) => m.providers?.stream.some((p) => p.name === s))) return false;
     if (q) {
-      const haystack = [m.title, m.originalTitle ?? '', m.collection ?? '', r?.note ?? '', r?.review ?? '', ...m.directors, ...m.cast.map((c) => c.name)];
+      const haystack = [m.title, m.originalTitle ?? '', m.collection ?? '', r?.note ?? '', r?.review ?? '', watchlist?.[m.key]?.why ?? '', ...m.directors, ...m.cast.map((c) => c.name)];
       if (!haystack.some((h) => normalize(h).includes(q))) return false;
     }
     return true;
   });
 
-  const cmp = comparator(f.sort, ratings);
+  const cmp = watchlist && f.sort === 'rec' ? byPriority(watchlist) : comparator(f.sort, ratings, watchlist);
   return result.sort((a, b) => cmp(a, b) || a.title.localeCompare(b.title));
 }
 
-function comparator(sort: SortKey, ratings: Record<string, Rating>): (a: Movie, b: Movie) => number {
+const PRIORITY_RANK = { high: 0, medium: 1, unset: 2, low: 3 };
+
+function byPriority(watchlist: Watchlist) {
+  const rank = (m: Movie) => PRIORITY_RANK[watchlist[m.key]?.priority ?? 'unset'];
+  return (a: Movie, b: Movie) =>
+    rank(a) - rank(b) || (watchlist[b.key]?.addedAt ?? '').localeCompare(watchlist[a.key]?.addedAt ?? '');
+}
+
+function comparator(sort: SortKey, ratings: Record<string, Rating>, watchlist?: Watchlist): (a: Movie, b: Movie) => number {
   if (sort.startsWith('score:')) {
     const id = sort.slice(6) as ScoreId;
     return (a, b) => (ratings[b.key]?.scores?.[id] ?? -1) - (ratings[a.key]?.scores?.[id] ?? -1);
   }
   switch (sort) {
+    case 'added':
+      return (a, b) => (watchlist?.[b.key]?.addedAt ?? '').localeCompare(watchlist?.[a.key]?.addedAt ?? '');
     case 'watched':
       return (a, b) => lastWatched(b).localeCompare(lastWatched(a));
     case 'newest':

@@ -18,7 +18,7 @@ export interface Play {
 /** One entry of data/movies.json, produced by scripts/enrich-tmdb.mjs. */
 export interface Movie {
   key: string;
-  ids: { trakt: number; tmdb: number | null; imdb: string | null; slug: string };
+  ids: { trakt?: number; tmdb: number | null; imdb: string | null; slug?: string };
   plays: Play[];
   year: number;
   title: string;
@@ -62,3 +62,30 @@ export interface Rating {
 }
 
 export type Ratings = Record<string, Rating>;
+
+export type Priority = 'high' | 'medium' | 'low';
+
+/** One entry of data/watchlist.json, keyed by TMDB id. */
+export interface WatchlistEntry {
+  addedAt: string;
+  source: 'trakt' | 'site';
+  title?: string;
+  year?: number | null;
+  priority?: Priority;
+  /** Why it's on the list, or who recommended it. */
+  why?: string;
+  /** Kept as a tombstone so a Trakt sync doesn't add it back. */
+  removed?: boolean;
+  updatedAt?: string;
+}
+
+export type Watchlist = Record<string, WatchlistEntry>;
+
+/** A TMDB search result when adding to the watchlist. */
+export interface SearchResult {
+  tmdb: number;
+  title: string;
+  year: number | null;
+  poster: string | null;
+  overview: string;
+}

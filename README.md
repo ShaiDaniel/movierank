@@ -17,6 +17,17 @@ Ratings are saved to `data/ratings.json` as you rate. The published site is read
 
 `npm run enrich -- --refresh` re-fetches TMDB data for everything (e.g. to update streaming availability).
 
+## Watchlist
+
+The **Watchlist** tab shows movies you plan to watch, with priority and why/who recommended them.
+
+- **Add from the site:** click **+ Watchlist** (local admin only), search TMDB, add, then set priority and why.
+- **From Trakt:** `npm run sync` merges new Trakt watchlist movies. Movies you removed on the site stay removed.
+- **Watched it?** Once it shows up in your Trakt history (after a sync), it leaves the watchlist and appears
+  in Rate mode as unrated.
+
+Stored in `data/watchlist.json` (+ `watchlist-history.jsonl`); `data/watchlist-movies.json` holds its TMDB details.
+
 ## How dates work
 
 Plays logged before **2017-08-23** are treated as backfills (Trakt filled in the release date, or the
@@ -44,7 +55,7 @@ npm run ratings:rebuild                              # replay everything
 npm run ratings:rebuild -- --until 2026-10-01T12:00  # or only up to a point in time
 ```
 
-Run `npm run backup` after a rating session to commit and push your ratings to GitHub.
+Run `npm run backup` after a session to commit and push your ratings and watchlist to GitHub.
 
 The rebuild writes `data/ratings.rebuilt.json` for you to check and copy over; it never overwrites `ratings.json`.
 In the browser, unsaved edits are kept in localStorage and retried until the dev server confirms them.

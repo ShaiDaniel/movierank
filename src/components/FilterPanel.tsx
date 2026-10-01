@@ -1,6 +1,6 @@
 import { useMemo, useState, type CSSProperties } from 'react';
 import { SCORES, VERDICTS } from '../config';
-import { PERSON_ROLES, SORTS, personNames, type Filters, type PersonRole, type SortKey, type VerdictFilter } from '../filters';
+import { PERSON_ROLES, SORTS, WATCHLIST_SORTS, personNames, type Filters, type PersonRole, type SortKey, type VerdictFilter } from '../filters';
 import type { Movie, Ratings } from '../types';
 
 interface Props {
@@ -8,11 +8,14 @@ interface Props {
   ratings: Ratings;
   filters: Filters;
   onChange: (patch: Partial<Filters>) => void;
+  /** The watchlist has no verdicts, scores or watch dates to filter on. */
+  mode: 'watched' | 'watchlist';
 }
 
 const toggle = <T,>(list: T[], item: T) => (list.includes(item) ? list.filter((x) => x !== item) : [...list, item]);
 
-export function FilterPanel({ movies, ratings, filters, onChange }: Props) {
+export function FilterPanel({ movies, ratings, filters, onChange, mode }: Props) {
+  const watched = mode === 'watched';
   const genres = useMemo(() => countBy(movies.flatMap((m) => m.genres)), [movies]);
   const streamers = useMemo(
     () => countBy(movies.flatMap((m) => m.providers?.stream.map((p) => p.name) ?? [])).slice(0, 10),
@@ -33,6 +36,7 @@ export function FilterPanel({ movies, ratings, filters, onChange }: Props) {
 
   return (
     <div className="filters">
+      {watched && (
       <section>
         <h4>Verdict</h4>
         <div className="chips">
@@ -49,6 +53,7 @@ export function FilterPanel({ movies, ratings, filters, onChange }: Props) {
           ))}
         </div>
       </section>
+      )}
 
       <section>
         <h4>Director, actor, composer…</h4>
@@ -64,6 +69,7 @@ export function FilterPanel({ movies, ratings, filters, onChange }: Props) {
         )}
       </section>
 
+      {watched && (
       <section>
         <h4>Minimum scores</h4>
         {SCORES.map((s) => {
@@ -83,6 +89,7 @@ export function FilterPanel({ movies, ratings, filters, onChange }: Props) {
           );
         })}
       </section>
+      )}
 
       <section>
         <h4>Genre</h4>
@@ -138,6 +145,7 @@ export function FilterPanel({ movies, ratings, filters, onChange }: Props) {
       </section>
 
       <section className="two-col">
+        {watched && (
         <label>
           <h4>Watched</h4>
           <select value={filters.watched} onChange={(e) => onChange({ watched: e.target.value })}>
@@ -150,10 +158,11 @@ export function FilterPanel({ movies, ratings, filters, onChange }: Props) {
             <option value="before">Before tracking</option>
           </select>
         </label>
+        )}
         <label>
           <h4>Sort by</h4>
           <select value={filters.sort} onChange={(e) => onChange({ sort: e.target.value as SortKey })}>
-            {SORTS.map((s) => (
+            {(watched ? SORTS : WATCHLIST_SORTS).map((s) => (
               <option key={s.id} value={s.id}>
                 {s.label}
               </option>
