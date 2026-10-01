@@ -441,3 +441,4 @@
 {"at":"2026-10-01T16:55:20.298Z","key":"38","rating":{"verdict":"shouldnot","updatedAt":"2026-10-01T16:55:11.049Z","scores":{"fun":3,"epic":5,"story":6,"acting":6,"visuals":4,"audio":4,"rewatch":2,"holdsUp":5}},"by":"site"}
 {"at":"2026-10-01T16:56:41.614Z","key":"629","rating":{"verdict":"must","updatedAt":"2026-10-01T16:56:32.468Z","scores":{"fun":8,"epic":8,"story":7,"acting":8,"visuals":5,"audio":4,"rewatch":3,"holdsUp":6}},"by":"site"}
 {"at":"2026-10-01T16:58:09.561Z","key":"600","rating":{"verdict":"neutral","updatedAt":"2026-10-01T16:58:00.461Z","scores":{"fun":3,"epic":8,"story":7,"acting":7,"visuals":4,"audio":4,"rewatch":5}},"by":"site"}
+{"at":"2026-10-01T16:58:40.569Z","key":"1327819","rating":{"verdict":"neutral","updatedAt":"2026-10-01T16:58:31.569Z","scores":{"fun":7,"epic":2,"story":6,"acting":5,"visuals":5,"audio":4,"rewatch":5}},"by":"site"}

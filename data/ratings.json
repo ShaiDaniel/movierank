@@ -845,5 +845,18 @@
   },
   "updatedAt": "2026-10-01T15:42:22.528Z",
   "verdict": "may"
+ },
+ "1327819": {
+  "verdict": "neutral",
+  "updatedAt": "2026-10-01T16:58:31.569Z",
+  "scores": {
+   "fun": 7,
+   "epic": 2,
+   "story": 6,
+   "acting": 5,
+   "visuals": 5,
+   "audio": 4,
+   "rewatch": 5
+  }
  }
 }
