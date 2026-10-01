@@ -7,3 +7,4 @@ trakt-export-*.zip
 data/tmdb-cache/
 data/ratings.rebuilt.json
 data/ratings.json.tmp
+data/imdb-cache/

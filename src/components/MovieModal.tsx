@@ -108,7 +108,7 @@ export function MovieModal({ movie, rating, movies, ratings, entry, onWatchlistC
                 )}
                 {movie.ids.imdb && (
                   <a className="btn" href={`https://www.imdb.com/title/${movie.ids.imdb}/`} target="_blank" rel="noreferrer">
-                    IMDb
+                    IMDb {movie.imdbRating !== undefined ? `★ ${movie.imdbRating.toFixed(1)}` : ''}
                   </a>
                 )}
                 {movie.ids.tmdb && (

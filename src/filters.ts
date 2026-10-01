@@ -20,6 +20,7 @@ export type SortKey =
   | 'oldest'
   | 'title'
   | 'tmdb'
+  | 'imdb'
   | 'runtime'
   | 'added'
   | `score:${ScoreId}`;
@@ -30,6 +31,7 @@ export const SORTS: { id: SortKey; label: string }[] = [
   { id: 'newest', label: 'Newest release' },
   { id: 'oldest', label: 'Oldest release' },
   { id: 'title', label: 'Title' },
+  { id: 'imdb', label: 'IMDb rating' },
   { id: 'tmdb', label: 'TMDB rating' },
   { id: 'runtime', label: 'Shortest' },
   ...SCORES.map((s) => ({ id: `score:${s.id}` as SortKey, label: `${s.label} score` })),
@@ -39,7 +41,7 @@ export const SORTS: { id: SortKey; label: string }[] = [
 export const WATCHLIST_SORTS: { id: SortKey; label: string }[] = [
   { id: 'rec', label: 'Priority' },
   { id: 'added', label: 'Recently added' },
-  ...SORTS.filter((s) => ['newest', 'oldest', 'title', 'tmdb', 'runtime'].includes(s.id)),
+  ...SORTS.filter((s) => ['newest', 'oldest', 'title', 'imdb', 'tmdb', 'runtime'].includes(s.id)),
 ];
 
 export interface Filters {
@@ -212,6 +214,8 @@ function comparator(sort: SortKey, ratings: Record<string, Rating>, watchlist?: 
       return (a, b) => (a.releaseDate ?? String(a.year)).localeCompare(b.releaseDate ?? String(b.year));
     case 'title':
       return () => 0;
+    case 'imdb':
+      return (a, b) => (b.imdbRating ?? 0) - (a.imdbRating ?? 0) || (b.imdbVotes ?? 0) - (a.imdbVotes ?? 0);
     case 'tmdb':
       return (a, b) => (b.tmdbRating ?? 0) - (a.tmdbRating ?? 0);
     case 'runtime':

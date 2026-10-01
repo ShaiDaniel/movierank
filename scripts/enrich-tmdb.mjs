@@ -1,5 +1,5 @@
 // Adds TMDB metadata (poster, genres, crew, cast, trailer, Israeli streaming providers)
-// and writes the site's catalogs:
+// and IMDb ratings, and writes the site's catalogs:
 //   data/movies.json            — watched movies (from data/trakt-movies.json)
 //   data/watchlist-movies.json  — movies on the watchlist (from data/watchlist.json)
 //
@@ -8,11 +8,18 @@
 // (useful to update streaming availability).
 
 import { dataFile, readJsonFile, writeJsonAtomic } from './store.mjs';
+import { refreshImdbRatings, withImdbRating } from './imdb.mjs';
 import { catalogEntry, loadDetails } from './tmdb.mjs';
 
 const CONCURRENCY = 8;
 const refresh = process.argv.includes('--refresh');
 const token = process.env.TMDB_TOKEN;
+
+try {
+  await refreshImdbRatings();
+} catch (e) {
+  console.warn(`IMDb ratings not updated (${e.message}); using the cached copy if there is one.`);
+}
 
 async function enrich(items, label) {
   const failed = [];
@@ -33,7 +40,7 @@ async function enrich(items, label) {
     }),
   );
   if (failed.length) console.log(`Failed (${failed.length}):\n  ${failed.join('\n  ')}`);
-  return items.map((m) => catalogEntry(m, m.tmdb));
+  return items.map((m) => withImdbRating(catalogEntry(m, m.tmdb)));
 }
 
 const watched = readJsonFile(dataFile('trakt-movies.json'), []);

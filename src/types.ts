@@ -33,6 +33,9 @@ export interface Movie {
   language?: string;
   collection?: string | null;
   tmdbRating?: number | null;
+  /** From IMDb's daily ratings dataset. */
+  imdbRating?: number;
+  imdbVotes?: number;
   tmdbVotes?: number;
   popularity?: number;
   certification?: string | null;

@@ -19,6 +19,11 @@ export function MovieCard({ movie, rating, entry, onOpen }: Props) {
     <button type="button" className="card" onClick={onOpen} style={{ '--c': verdict?.color } as CSSProperties}>
       <div className="card-poster">
         {poster ? <img src={poster} alt="" loading="lazy" /> : <div className="no-poster">{movie.title}</div>}
+        {movie.imdbRating !== undefined && (
+          <span className="card-imdb" title={`IMDb ${movie.imdbRating} (${movie.imdbVotes?.toLocaleString()} votes)`}>
+            IMDb <b>{movie.imdbRating.toFixed(1)}</b>
+          </span>
+        )}
         {verdict && <span className="card-verdict">{verdict.label}</span>}
         {entry?.priority && <span className={`card-priority priority-badge ${entry.priority}`}>{entry.priority}</span>}
         {epic !== undefined && epic >= 8 && (

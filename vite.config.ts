@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import type { IncomingMessage } from 'node:http';
 // MOVIERANK_DATA (read in store.mjs) lets tests run against a scratch copy instead of the real data.
 import { dataFile, readJsonFile, setEntry, writeJsonAtomic } from './scripts/store.mjs';
+import { withImdbRating } from './scripts/imdb.mjs';
 import { catalogEntry, loadDetails, searchMovies } from './scripts/tmdb.mjs';
 
 /** Data files the site loads, with what to serve when one doesn't exist yet. */
@@ -63,7 +64,9 @@ function dataPlugin(tmdbToken: string | undefined): Plugin {
             const catalog: { key: string }[] = readJsonFile(catalogFile, []);
             let entry = catalog.find((m) => m.key === key);
             if (!entry) {
-              entry = catalogEntry({ key, title: key, year: null, ids: { tmdb: Number(key), imdb: null } }, await loadDetails(tmdbToken, key));
+              entry = withImdbRating(
+                catalogEntry({ key, title: key, year: null, ids: { tmdb: Number(key), imdb: null } }, await loadDetails(tmdbToken, key)),
+              );
               writeJsonAtomic(catalogFile, [...catalog, entry], { sortKeys: false, indent: 0 });
             }
             return json(200, entry);
