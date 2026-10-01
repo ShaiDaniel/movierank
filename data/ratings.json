@@ -414,6 +414,20 @@
   "updatedAt": "2026-10-01T10:58:55.721Z",
   "verdict": "should"
  },
+ "1124": {
+  "verdict": "may",
+  "updatedAt": "2026-10-01T16:27:57.432Z",
+  "scores": {
+   "fun": 7,
+   "epic": 4,
+   "story": 6,
+   "acting": 7,
+   "visuals": 6,
+   "audio": 5,
+   "rewatch": 5,
+   "holdsUp": 6
+  }
+ },
  "1422": {
   "scores": {
    "fun": 6,
