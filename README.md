@@ -2,6 +2,9 @@
 
 Shai's verdicts on every movie watched, for co-workers deciding what to watch.
 
+**Live site:** https://shaidaniel.github.io/movierank/ — published by GitHub Actions on every push to `main`
+(so `npm run backup` also publishes). The public site is read-only; edit locally, then back up.
+
 ## Everyday use
 
 ```bash
