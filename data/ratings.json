@@ -336,6 +336,19 @@
   "updatedAt": "2026-10-01T10:57:27.003Z",
   "verdict": "may"
  },
+ "600": {
+  "verdict": "neutral",
+  "updatedAt": "2026-10-01T16:58:00.461Z",
+  "scores": {
+   "fun": 3,
+   "epic": 8,
+   "story": 7,
+   "acting": 7,
+   "visuals": 4,
+   "audio": 4,
+   "rewatch": 5
+  }
+ },
  "603": {
   "scores": {
    "epic": 10,
