@@ -678,6 +678,19 @@
   "updatedAt": "2026-10-01T15:43:05.497Z",
   "verdict": "may"
  },
+ "146233": {
+  "verdict": "may",
+  "updatedAt": "2026-10-01T17:00:18.406Z",
+  "scores": {
+   "fun": 6,
+   "epic": 5,
+   "story": 7,
+   "acting": 8,
+   "visuals": 4,
+   "audio": 4,
+   "rewatch": 3
+  }
+ },
  "157336": {
   "verdict": "should",
   "updatedAt": "2026-10-01T10:54:43.043Z",
