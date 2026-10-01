@@ -92,3 +92,13 @@ export interface SearchResult {
   poster: string | null;
   overview: string;
 }
+
+/** Watches logged on the site (data/watches.json), keyed by TMDB id; merged with Trakt plays for display. */
+export interface LoggedWatch {
+  title?: string;
+  year?: number | null;
+  plays: Play[];
+  updatedAt?: string;
+}
+
+export type Watches = Record<string, LoggedWatch>;

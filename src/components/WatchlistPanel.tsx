@@ -1,5 +1,7 @@
 import { useEditMode } from '../edit';
-import type { Priority, WatchlistEntry } from '../types';
+import { useState } from 'react';
+import type { Movie, Play, Priority, WatchlistEntry } from '../types';
+import { WatchDatePicker } from './WatchDatePicker';
 
 export const PRIORITIES: { id: Priority; label: string }[] = [
   { id: 'high', label: 'High' },
@@ -11,11 +13,15 @@ const fmt = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { month: 
 
 interface Props {
   entry: WatchlistEntry;
+  movie: Movie;
   onChange: (update: (prev: WatchlistEntry) => WatchlistEntry) => void;
+  /** Logs a watch; the movie then leaves the watchlist and shows up in Watched. */
+  onSeen: (play: Play) => void;
 }
 
 /** Shown in the movie page for watchlist movies, instead of the verdict panel. */
-export function WatchlistPanel({ entry, onChange }: Props) {
+export function WatchlistPanel({ entry, movie, onChange, onSeen }: Props) {
+  const [seen, setSeen] = useState(false);
   const ADMIN = useEditMode() !== null;
   const update = (patch: Partial<WatchlistEntry>) =>
     onChange((prev) => ({ ...prev, ...patch, updatedAt: new Date().toISOString() }));
@@ -55,9 +61,18 @@ export function WatchlistPanel({ entry, onChange }: Props) {
               }}
             />
           </label>
-          <button type="button" className="link remove-link" onClick={() => update({ removed: true })}>
-            Remove from watchlist
-          </button>
+          {seen ? (
+            <WatchDatePicker movie={movie} confirmLabel="Move to Watched" onConfirm={onSeen} onCancel={() => setSeen(false)} />
+          ) : (
+            <div className="watchlist-actions">
+              <button type="button" className="btn primary" onClick={() => setSeen(true)}>
+                ✓ Seen it
+              </button>
+              <button type="button" className="link remove-link" onClick={() => update({ removed: true })}>
+                Remove from watchlist
+              </button>
+            </div>
+          )}
         </>
       ) : (
         entry.why && <p className="note">“{entry.why}”</p>

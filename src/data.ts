@@ -6,7 +6,7 @@ import { buildDataFiles, FILES } from '../shared/data-files.mjs';
 import { githubClient } from '../shared/github.mjs';
 import { catalogEntry, DETAILS_QUERY, searchMovies, tmdbFetch, trim } from '../shared/tmdb-core.mjs';
 import { decryptVault } from '../shared/vault.mjs';
-import type { Movie, Rating, Ratings, SearchResult, Watchlist, WatchlistEntry } from './types';
+import type { LoggedWatch, Movie, Rating, Ratings, SearchResult, Watches, Watchlist, WatchlistEntry } from './types';
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -17,7 +17,7 @@ let tmdbToken: string | null = null;
 
 export const editMode = () => mode;
 
-type Collection = 'ratings' | 'watchlist' | 'watchlist-movies';
+type Collection = 'ratings' | 'watchlist' | 'watchlist-movies' | 'watches' | 'logged-movies';
 
 async function getJson<T>(name: string): Promise<T> {
   const res = await fetch(`${BASE}data/${name}.json`, { cache: 'no-store' });
@@ -26,15 +26,18 @@ async function getJson<T>(name: string): Promise<T> {
 }
 
 export interface SiteData {
+  /** Trakt history only; see mergeWatched for the full Watched list. */
   movies: Movie[];
   ratings: Ratings;
   watchlistMovies: Movie[];
   watchlist: Watchlist;
+  watches: Watches;
+  loggedMovies: Movie[];
 }
 
 /** Everything the site shows. When editing on GitHub, user data comes from the repo head (the deploy may lag). */
 export async function loadAll(): Promise<SiteData> {
-  const fromRepo = async <T,>(name: keyof typeof FILES, fallback: T): Promise<T> => {
+  const fromRepo = async <T,>(name: keyof typeof PUBLIC_NAME, fallback: T): Promise<T> => {
     try {
       const text = await github!.readText(FILES[name]);
       return text ? JSON.parse(text) : fallback;
@@ -43,26 +46,41 @@ export async function loadAll(): Promise<SiteData> {
       console.error('Reading from GitHub failed', e);
       failure = "Couldn't read from GitHub — the token may have expired. Run npm run edit:setup again.";
       notify();
-      return getJson<T>(name === 'watchlistMovies' ? 'watchlist-movies' : name);
+      return getJson<T>(PUBLIC_NAME[name]);
     }
   };
-  const [movies, ratings, watchlistMovies, watchlist] = await Promise.all([
+  const load = <T,>(name: keyof typeof PUBLIC_NAME, fallback: T) =>
+    mode === 'github' ? fromRepo<T>(name, fallback) : getJson<T>(PUBLIC_NAME[name]);
+  const [movies, ratings, watchlistMovies, watchlist, watches, loggedMovies] = await Promise.all([
     getJson<Movie[]>('movies'),
-    mode === 'github' ? fromRepo<Ratings>('ratings', {}) : getJson<Ratings>('ratings'),
-    mode === 'github' ? fromRepo<Movie[]>('watchlistMovies', []) : getJson<Movie[]>('watchlist-movies'),
-    mode === 'github' ? fromRepo<Watchlist>('watchlist', {}) : getJson<Watchlist>('watchlist'),
+    load<Ratings>('ratings', {}),
+    load<Movie[]>('watchlistMovies', []),
+    load<Watchlist>('watchlist', {}),
+    load<Watches>('watches', {}),
+    load<Movie[]>('loggedMovies', []),
   ]);
   return {
     movies,
     ratings: withUnsaved('ratings', ratings),
     watchlist: withUnsaved('watchlist', watchlist),
-    watchlistMovies: [
-      ...watchlistMovies,
-      ...pendingOf<Movie>('watchlist-movies')
-        .filter(([key, m]) => m && !watchlistMovies.some((w) => w.key === key))
-        .map(([, m]) => m as Movie),
-    ],
+    watches: withUnsaved('watches', watches),
+    watchlistMovies: withPendingMovies('watchlist-movies', watchlistMovies),
+    loggedMovies: withPendingMovies('logged-movies', loggedMovies),
   };
+}
+
+/** Repo file key → published file name (data/<name>.json). */
+const PUBLIC_NAME = {
+  ratings: 'ratings',
+  watchlist: 'watchlist',
+  watchlistMovies: 'watchlist-movies',
+  watches: 'watches',
+  loggedMovies: 'logged-movies',
+} as const;
+
+function withPendingMovies(collection: Collection, loaded: Movie[]): Movie[] {
+  const pending = pendingOf<Movie>(collection).filter(([key, m]) => m && !loaded.some((x) => x.key === key));
+  return [...loaded, ...pending.map(([, m]) => m as Movie)];
 }
 
 export function isEmptyRating(r: Rating | undefined) {
@@ -198,7 +216,8 @@ function scheduleRetry() {
 
 /** Local mode: one request per entry to the dev server. */
 async function flushLocal(id: string) {
-  if (!(id in unsaved) || mode !== 'local' || id.startsWith('watchlist-movies/')) return;
+  // Catalog entries are written by the dev server when fetched, so only user edits are sent.
+  if (!(id in unsaved) || mode !== 'local' || /^(watchlist|logged)-movies\//.test(id)) return;
   const value = unsaved[id];
   try {
     const res = await fetch(`/__admin/${id.split('/').map(encodeURIComponent).join('/')}`, {
@@ -230,13 +249,17 @@ async function flushGithub() {
   const changes = {
     ratings: {} as Record<string, unknown>,
     watchlist: {} as Record<string, unknown>,
+    watches: {} as Record<string, unknown>,
     watchlistMovies: [] as unknown[],
+    loggedMovies: [] as unknown[],
   };
   for (const [id, value] of Object.entries(snapshot)) {
     const [collection, key] = id.split('/');
     if (collection === 'ratings') changes.ratings[key] = value;
     else if (collection === 'watchlist') changes.watchlist[key] = value;
+    else if (collection === 'watches') changes.watches[key] = value;
     else if (collection === 'watchlist-movies' && value) changes.watchlistMovies.push(value);
+    else if (collection === 'logged-movies' && value) changes.loggedMovies.push(value);
   }
   committing = true;
   notify();
@@ -299,6 +322,8 @@ export const saveRating = (key: string, rating: Rating | undefined) =>
 
 export const saveWatchlistEntry = (key: string, entry: WatchlistEntry) => save('watchlist', key, entry);
 
+export const saveWatch = (key: string, watch: LoggedWatch | null) => save('watches', key, watch?.plays.length ? watch : null);
+
 // Try to get pending edits out before the tab closes (they're in localStorage regardless).
 if (typeof window !== 'undefined') {
   window.addEventListener('visibilitychange', () => document.visibilityState === 'hidden' && saveNow());
@@ -313,17 +338,17 @@ export async function searchTmdb(query: string): Promise<SearchResult[]> {
   return res.json();
 }
 
-/** Full details for a movie being added; also queues it for the watchlist catalog. */
-export async function fetchWatchlistMovie(tmdbId: number): Promise<Movie> {
+/** Full details for a movie being added; also stores it in that list's catalog. */
+export async function fetchMovieDetails(tmdbId: number, catalog: 'watchlist' | 'logged'): Promise<Movie> {
   if (mode === 'github') {
     const details = trim(await tmdbFetch(tmdbToken, `/movie/${tmdbId}${DETAILS_QUERY}`));
     const key = String(tmdbId);
     // The IMDb rating is filled in by the next `npm run sync`.
     const movie: Movie = catalogEntry({ key, title: key, year: null, ids: { tmdb: tmdbId, imdb: null } }, details);
-    save('watchlist-movies', key, movie);
+    save(catalog === 'logged' ? 'logged-movies' : 'watchlist-movies', key, movie);
     return movie;
   }
-  const res = await fetch(`/__admin/tmdb/movie/${tmdbId}`, { method: 'POST' });
+  const res = await fetch(`/__admin/tmdb/movie/${tmdbId}?catalog=${catalog}`, { method: 'POST' });
   if (!res.ok) throw new Error(`Could not load movie details (${res.status})`);
   return res.json();
 }

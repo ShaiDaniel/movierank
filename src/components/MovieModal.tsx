@@ -2,7 +2,8 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { SCORES, VERDICT_BY_ID, tmdbImage } from '../config';
 import { useEditMode } from '../edit';
 import type { PersonRole } from '../filters';
-import type { Movie, Provider, Rating, Ratings, WatchlistEntry } from '../types';
+import type { LoggedWatch, Movie, Play, Provider, Rating, Ratings, WatchlistEntry } from '../types';
+import { LoggedWatches } from './LoggedWatches';
 import { CopyFrom, copyRating } from './CopyFrom';
 import { RatingEditor } from './RatingEditor';
 import { WatchInfo } from './WatchInfo';
@@ -16,13 +17,17 @@ interface Props {
   /** Set when the movie is opened from the watchlist tab. */
   entry?: WatchlistEntry;
   onWatchlistChange?: (update: (prev: WatchlistEntry) => WatchlistEntry) => void;
+  /** Watches logged on the site for this movie. */
+  watch?: LoggedWatch;
+  onLogWatch: (play: Play) => void;
+  onRemoveWatch: (at: string) => void;
   onRate: (update: Rating | ((prev: Rating) => Rating)) => void;
   onClose: () => void;
   onStep: (delta: number) => void;
   onPerson: (code: string) => void;
 }
 
-export function MovieModal({ movie, rating, movies, ratings, entry, onWatchlistChange, onRate, onClose, onStep, onPerson }: Props) {
+export function MovieModal({ movie, rating, movies, ratings, entry, onWatchlistChange, watch, onLogWatch, onRemoveWatch, onRate, onClose, onStep, onPerson }: Props) {
   const ADMIN = useEditMode() !== null;
   const [editing, setEditing] = useState(false);
   const [trailer, setTrailer] = useState(false);
@@ -127,7 +132,7 @@ export function MovieModal({ movie, rating, movies, ratings, entry, onWatchlistC
           </div>
 
           {entry && onWatchlistChange ? (
-            <WatchlistPanel entry={entry} onChange={onWatchlistChange} />
+            <WatchlistPanel entry={entry} movie={movie} onChange={onWatchlistChange} onSeen={onLogWatch} />
           ) : (
           <section className="verdict-panel">
             {editing ? (
@@ -158,6 +163,7 @@ export function MovieModal({ movie, rating, movies, ratings, entry, onWatchlistC
               <p className="muted">Not ranked yet.</p>
             )}
             <WatchInfo movie={movie} rating={rating} />
+            {ADMIN && <LoggedWatches movie={movie} watch={watch} onAdd={onLogWatch} onRemove={onRemoveWatch} />}
           </section>
           )}
 

@@ -12,6 +12,9 @@ const FILES = [
   'data/watchlist.json',
   'data/watchlist-history.jsonl',
   'data/watchlist-movies.json',
+  'data/watches.json',
+  'data/watches-history.jsonl',
+  'data/logged-movies.json',
 ].filter((f) => fs.existsSync(path.join(ROOT, f)));
 const git = (...args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim();
 

@@ -56,3 +56,13 @@ const listed = Object.keys(watchlist)
 const watchlistMovies = await enrich(listed, 'watchlist');
 writeJsonAtomic(dataFile('watchlist-movies.json'), watchlistMovies, { sortKeys: false, indent: 0 });
 console.log(`Wrote ${watchlistMovies.length} movies to data/watchlist-movies.json`);
+
+// Watches logged on the site for movies Trakt doesn't have.
+const traktKeys = new Set(watched.map((m) => m.key));
+const watches = readJsonFile(dataFile('watches.json'), {});
+const loggedOnly = Object.keys(watches)
+  .filter((key) => !traktKeys.has(key))
+  .map((key) => ({ key, title: watches[key].title ?? key, ids: { tmdb: Number(key), imdb: null } }));
+const loggedMovies = await enrich(loggedOnly, 'logged');
+writeJsonAtomic(dataFile('logged-movies.json'), loggedMovies, { sortKeys: false, indent: 0 });
+console.log(`Wrote ${loggedMovies.length} movies to data/logged-movies.json`);

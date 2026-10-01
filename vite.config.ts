@@ -7,9 +7,16 @@ import { withImdbRating } from './scripts/imdb.mjs';
 import { catalogEntry, loadDetails, searchMovies } from './scripts/tmdb.mjs';
 
 /** Data files the site loads, with what to serve when one doesn't exist yet. */
-const PUBLIC_DATA: Record<string, unknown> = { movies: [], ratings: {}, watchlist: {}, 'watchlist-movies': [] };
+const PUBLIC_DATA: Record<string, unknown> = {
+  movies: [],
+  ratings: {},
+  watchlist: {},
+  'watchlist-movies': [],
+  watches: {},
+  'logged-movies': [],
+};
 /** Files the admin UI may edit, one entry at a time. */
-const EDITABLE = new Set(['ratings', 'watchlist']);
+const EDITABLE = new Set(['ratings', 'watchlist', 'watches']);
 
 function readBody(req: IncomingMessage) {
   return new Promise<string>((resolve, reject) => {
@@ -56,11 +63,12 @@ function dataPlugin(tmdbToken: string | undefined): Plugin {
             return json(200, await searchMovies(tmdbToken, url.searchParams.get('q') ?? ''));
           }
 
-          // Fetches TMDB details for a movie being added to the watchlist and adds it to the watchlist catalog.
+          // Fetches TMDB details for a movie being added and stores it in the watchlist catalog,
+          // or with ?catalog=logged in the catalog of logged watches.
           const add = url.pathname.match(/^\/__admin\/tmdb\/movie\/(\d+)$/);
           if (req.method === 'POST' && add) {
             const key = add[1];
-            const catalogFile = dataFile('watchlist-movies.json');
+            const catalogFile = dataFile(url.searchParams.get('catalog') === 'logged' ? 'logged-movies.json' : 'watchlist-movies.json');
             const catalog: { key: string }[] = readJsonFile(catalogFile, []);
             let entry = catalog.find((m) => m.key === key);
             if (!entry) {

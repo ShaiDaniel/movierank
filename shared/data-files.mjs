@@ -8,6 +8,9 @@ export const FILES = {
   watchlist: 'data/watchlist.json',
   watchlistHistory: 'data/watchlist-history.jsonl',
   watchlistMovies: 'data/watchlist-movies.json',
+  watches: 'data/watches.json',
+  watchesHistory: 'data/watches-history.jsonl',
+  loggedMovies: 'data/logged-movies.json',
 };
 
 const sortedJson = (obj) =>
@@ -17,7 +20,9 @@ const sortedJson = (obj) =>
  * changes: {
  *   ratings?:   { [key]: rating | null },
  *   watchlist?: { [key]: entry | null },
- *   watchlistMovies?: Movie[]   // catalog entries for newly added watchlist movies
+ *   watches?:   { [key]: loggedWatch | null },
+ *   watchlistMovies?: Movie[],  // catalog entries for newly added watchlist movies
+ *   loggedMovies?: Movie[],     // catalog entries for logged watches Trakt does not know
  * }
  * read(path) returns the file's current text (or null). Edits are merged per key
  * into the latest file, so changes made elsewhere in the meantime are kept.
@@ -27,6 +32,7 @@ export async function buildDataFiles(read, changes, at = new Date().toISOString(
   const collections = [
     ['ratings', FILES.ratings, FILES.ratingsHistory, 'rating'],
     ['watchlist', FILES.watchlist, FILES.watchlistHistory, 'entry'],
+    ['watches', FILES.watches, FILES.watchesHistory, 'entry'],
   ];
   for (const [name, file, historyFile, field] of collections) {
     const edits = Object.entries(changes[name] ?? {});
@@ -43,12 +49,16 @@ export async function buildDataFiles(read, changes, at = new Date().toISOString(
     files[historyFile] = history;
   }
 
-  const added = changes.watchlistMovies ?? [];
-  if (added.length) {
-    const catalog = JSON.parse((await read(FILES.watchlistMovies)) ?? '[]');
+  for (const [name, file] of [
+    ['watchlistMovies', FILES.watchlistMovies],
+    ['loggedMovies', FILES.loggedMovies],
+  ]) {
+    const added = changes[name] ?? [];
+    if (!added.length) continue;
+    const catalog = JSON.parse((await read(file)) ?? '[]');
     const known = new Set(catalog.map((m) => m.key));
     const fresh = added.filter((m) => !known.has(m.key));
-    if (fresh.length) files[FILES.watchlistMovies] = JSON.stringify([...catalog, ...fresh]) + '\n';
+    if (fresh.length) files[file] = JSON.stringify([...catalog, ...fresh]) + '\n';
   }
   return files;
 }

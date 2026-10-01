@@ -20,6 +20,16 @@ Ratings are saved to `data/ratings.json` as you rate. The published site is read
 
 `npm run enrich -- --refresh` re-fetches TMDB data for everything (e.g. to update streaming availability).
 
+## Logging watches on the site
+
+**+ Watched** (when editing) searches TMDB and logs a watch: today, on a date, or "a long time ago"
+(shown as before tracking). On a watchlist movie, **Seen it** does the same and moves it to Watched.
+On a movie's page, **+ Watched it again** adds a rewatch, and logged dates can be removed.
+
+Logged watches live in `data/watches.json` (+ `watches-history.jsonl`; details of movies Trakt doesn't
+know in `data/logged-movies.json`). They are merged with Trakt for display and never overwrite Trakt data.
+If you log a movie in both, a site play within a day of a Trakt play counts as the same watch.
+
 ## Watchlist
 
 The **Watchlist** tab shows movies you plan to watch, with priority and why/who recommended them.

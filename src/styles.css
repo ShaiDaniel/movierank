@@ -286,3 +286,13 @@ kbd { padding: 1px 6px; border-radius: 4px; background: var(--panel-2); border: 
 .unlock-dialog { max-width: 420px; margin-top: 10vh; }
 .unlock-dialog .modal-content { padding: 24px; display: grid; gap: 12px; }
 .unlock-dialog input[type='password'] { width: 100%; padding: 8px 10px; border-radius: 8px; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); }
+
+/* Logging watches */
+.watch-picker { display: grid; gap: 8px; }
+.watch-picker input[type='date'] { padding: 3px 8px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); color-scheme: dark; }
+.watch-picker-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.logged-watches { display: grid; gap: 8px; margin-top: 10px; justify-items: start; }
+.logged-play { display: inline-flex; gap: 6px; align-items: center; cursor: default; }
+.watchlist-actions { display: flex; align-items: center; gap: 16px; }
+.picked { display: flex; align-items: center; gap: 12px; }
+.picked img { width: 46px; border-radius: 4px; }

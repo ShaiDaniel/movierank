@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AddToWatchlist } from './components/AddToWatchlist';
+import { AddMovieDialog, type AddPurpose } from './components/AddMovieDialog';
 import { FilterPanel } from './components/FilterPanel';
 import { MovieCard } from './components/MovieCard';
 import { MovieModal } from './components/MovieModal';
@@ -9,25 +9,30 @@ import { UnlockDialog } from './components/UnlockDialog';
 import {
   autoUnlock,
   editMode,
+  fetchMovieDetails,
   isEmptyRating,
   loadAll,
   lock,
   onSaveStatus,
   saveNow,
   saveRating,
+  saveWatch,
   saveWatchlistEntry,
   type EditMode,
   type SaveStatus,
 } from './data';
 import { EditContext } from './edit';
 import { DEFAULT_FILTERS, PRESETS, activeFilterCount, applyFilters, parseFilters, serializeFilters, type Filters } from './filters';
-import type { Movie, Rating, Ratings, Watchlist, WatchlistEntry } from './types';
+import type { Movie, Play, Rating, Ratings, Watches, Watchlist, WatchlistEntry } from './types';
+import { mergeWatched } from './watches';
 
 const PAGE = 120;
 type Tab = 'watched' | 'watchlist';
 
 export function App() {
-  const [movies, setMovies] = useState<Movie[] | null>(null);
+  const [traktMovies, setTraktMovies] = useState<Movie[] | null>(null);
+  const [watches, setWatches] = useState<Watches>({});
+  const [loggedMovies, setLoggedMovies] = useState<Movie[]>([]);
   const [ratings, setRatings] = useState<Ratings>({});
   const [watchlistMovies, setWatchlistMovies] = useState<Movie[]>([]);
   const [watchlist, setWatchlist] = useState<Watchlist>({});
@@ -36,7 +41,7 @@ export function App() {
   const [filters, setFilters] = useState<Filters>(() => parseFilters(location.search));
   const [openKey, setOpenKey] = useState<string | null>(() => new URLSearchParams(location.search).get('m'));
   const [rateMode, setRateMode] = useState(false);
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding] = useState<AddPurpose | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [visible, setVisible] = useState(PAGE);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>({ state: 'saved', pending: 0 });
@@ -51,7 +56,9 @@ export function App() {
   useEffect(() => {
     loadAll()
       .then((d) => {
-        setMovies(d.movies);
+        setTraktMovies(d.movies);
+        setWatches(d.watches);
+        setLoggedMovies(d.loggedMovies);
         setRatings(d.ratings);
         setWatchlistMovies(d.watchlistMovies);
         setWatchlist(d.watchlist);
@@ -68,6 +75,11 @@ export function App() {
     history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
   }, [filters, openKey, tab]);
 
+  // Watched = Trakt history plus watches logged on the site.
+  const movies = useMemo(
+    () => (traktMovies ? mergeWatched(traktMovies, [...loggedMovies, ...watchlistMovies], watches) : null),
+    [traktMovies, loggedMovies, watchlistMovies, watches],
+  );
   const watchedKeys = useMemo(() => new Set(movies?.map((m) => m.key)), [movies]);
   // Watched movies drop off the watchlist once they show up in the Trakt history.
   const listed = useMemo(
@@ -121,6 +133,35 @@ export function App() {
     });
   }, []);
 
+  const logWatch = useCallback(
+    async (movie: Movie, play: Play) => {
+      // Movies Trakt doesn't know need their details stored with the logged watches.
+      const needsCatalog = !traktMovies?.some((m) => m.key === movie.key) && !loggedMovies.some((m) => m.key === movie.key);
+      const details = needsCatalog ? await fetchMovieDetails(Number(movie.key), 'logged') : movie;
+      if (needsCatalog) setLoggedMovies((all) => [...all, details]);
+      setWatches((all) => {
+        const prev = all[movie.key];
+        const next = { title: movie.title, year: movie.year, plays: [...(prev?.plays ?? []), play], updatedAt: new Date().toISOString() };
+        saveWatch(movie.key, next);
+        return { ...all, [movie.key]: next };
+      });
+    },
+    [traktMovies, loggedMovies],
+  );
+
+  const removeWatch = useCallback((key: string, at: string) => {
+    setWatches((all) => {
+      const prev = all[key];
+      if (!prev) return all;
+      const next = { ...prev, plays: prev.plays.filter((p) => p.at !== at), updatedAt: new Date().toISOString() };
+      saveWatch(key, next);
+      const copy = { ...all };
+      if (next.plays.length) copy[key] = next;
+      else delete copy[key];
+      return copy;
+    });
+  }, []);
+
   const addToWatchlist = (movie: Movie) => {
     setWatchlistMovies((all) => (all.some((m) => m.key === movie.key) ? all : [...all, movie]));
     updateWatchlist(movie.key, (prev) => ({
@@ -132,7 +173,7 @@ export function App() {
       year: movie.year,
       updatedAt: new Date().toISOString(),
     }));
-    setAdding(false);
+    setAdding(null);
     setTab('watchlist');
     setOpenKey(movie.key); // straight to the movie page to set priority and why
   };
@@ -176,9 +217,14 @@ export function App() {
           onChange={(e) => patch({ q: e.target.value })}
         />
         {ADMIN && (
-          <button type="button" className="btn" onClick={() => setAdding(true)}>
-            + Watchlist
-          </button>
+          <>
+            <button type="button" className="btn" onClick={() => setAdding('watched')}>
+              + Watched
+            </button>
+            <button type="button" className="btn" onClick={() => setAdding('watchlist')}>
+              + Watchlist
+            </button>
+          </>
         )}
         {ADMIN && (
           <button type="button" className="btn primary" onClick={() => setRateMode(true)}>
@@ -308,6 +354,16 @@ export function App() {
           ratings={ratings}
           entry={tab === 'watchlist' ? watchlist[open.key] : undefined}
           onWatchlistChange={(update) => updateWatchlist(open.key, update)}
+          watch={watches[open.key]}
+          onLogWatch={async (play) => {
+            await logWatch(open, play);
+            // Seen it on the watchlist: it's now in Watched, so show it there.
+            if (tab === 'watchlist') {
+              setTab('watched');
+              setFilters(DEFAULT_FILTERS);
+            }
+          }}
+          onRemoveWatch={(at) => removeWatch(open.key, at)}
           onRate={(r) => rate(open.key, r)}
           onClose={closeModal}
           onStep={step}
@@ -321,16 +377,24 @@ export function App() {
       )}
 
       {ADMIN && adding && (
-        <AddToWatchlist
+        <AddMovieDialog
+          purpose={adding}
           watched={watchedKeys}
           listed={new Set(listed.map((m) => m.key))}
-          onAdded={addToWatchlist}
+          known={(key) => movies.find((m) => m.key === key)}
+          onAddToWatchlist={addToWatchlist}
+          onLogWatch={async (movie, play) => {
+            await logWatch(movie, play);
+            setAdding(null);
+            if (tab !== 'watched') switchTab('watched');
+            setOpenKey(movie.key); // straight to it, ready to rate
+          }}
           onOpen={(key, target) => {
-            setAdding(false);
+            setAdding(null);
             if (target !== tab) switchTab(target);
             setOpenKey(key);
           }}
-          onClose={() => setAdding(false)}
+          onClose={() => setAdding(null)}
         />
       )}
 
