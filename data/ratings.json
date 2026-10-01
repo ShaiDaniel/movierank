@@ -27,6 +27,20 @@
   "updatedAt": "2026-10-01T10:54:12.143Z",
   "verdict": "must"
  },
+ "38": {
+  "verdict": "shouldnot",
+  "updatedAt": "2026-10-01T16:55:11.049Z",
+  "scores": {
+   "fun": 3,
+   "epic": 5,
+   "story": 6,
+   "acting": 6,
+   "visuals": 4,
+   "audio": 4,
+   "rewatch": 2,
+   "holdsUp": 5
+  }
+ },
  "73": {
   "scores": {
    "epic": 8,

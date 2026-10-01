@@ -438,3 +438,4 @@
 {"at":"2026-10-01T16:28:06.790Z","key":"1124","rating":{"verdict":"may","updatedAt":"2026-10-01T16:27:57.432Z","scores":{"fun":7,"epic":4,"story":6,"acting":7,"visuals":6,"audio":5,"rewatch":5,"holdsUp":6}},"by":"site"}
 {"at":"2026-10-01T16:51:46.012Z","key":"694","rating":{"verdict":"may","updatedAt":"2026-10-01T16:51:36.128Z","scores":{"fun":6,"epic":9,"story":7,"acting":9,"visuals":5,"audio":5,"rewatch":4}},"by":"site"}
 {"at":"2026-10-01T16:52:13.711Z","key":"693134","rating":{"verdict":"should","updatedAt":"2026-10-01T16:52:04.601Z","scores":{"fun":8,"epic":8,"story":8,"acting":7,"visuals":9,"audio":6,"rewatch":5}},"by":"site"}
+{"at":"2026-10-01T16:55:20.298Z","key":"38","rating":{"verdict":"shouldnot","updatedAt":"2026-10-01T16:55:11.049Z","scores":{"fun":3,"epic":5,"story":6,"acting":6,"visuals":4,"audio":4,"rewatch":2,"holdsUp":5}},"by":"site"}
