@@ -443,6 +443,20 @@
   "updatedAt": "2026-10-01T15:36:43.788Z",
   "verdict": "may"
  },
+ "679": {
+  "verdict": "should",
+  "updatedAt": "2026-10-01T17:07:16.863Z",
+  "scores": {
+   "fun": 8,
+   "epic": 9,
+   "story": 7,
+   "acting": 7,
+   "visuals": 7,
+   "audio": 5,
+   "rewatch": 5,
+   "holdsUp": 4
+  }
+ },
  "680": {
   "scores": {
    "fun": 9,
