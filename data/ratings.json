@@ -106,6 +106,20 @@
   "updatedAt": "2026-10-01T11:03:15.803Z",
   "verdict": "may"
  },
+ "103": {
+  "scores": {
+   "epic": 8,
+   "fun": 7,
+   "holdsUp": 5,
+   "rewatch": 3,
+   "audio": 4,
+   "visuals": 4,
+   "acting": 8,
+   "story": 6
+  },
+  "updatedAt": "2026-10-01T17:04:06.820Z",
+  "verdict": "may"
+ },
  "105": {
   "scores": {
    "epic": 9,
