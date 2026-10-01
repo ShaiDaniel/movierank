@@ -8,7 +8,8 @@
     "import:trakt": "node scripts/import-trakt.mjs",
     "enrich": "node --env-file=.env scripts/enrich-tmdb.mjs",
     "sync": "npm run import:trakt && npm run enrich",
-    "ratings:rebuild": "node scripts/rebuild-ratings.mjs"
+    "ratings:rebuild": "node scripts/rebuild-ratings.mjs",
+    "backup": "node scripts/backup-ratings.mjs"
   },
   "dependencies": {
     "react": "^19.3.0",

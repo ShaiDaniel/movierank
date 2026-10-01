@@ -44,5 +44,7 @@ npm run ratings:rebuild                              # replay everything
 npm run ratings:rebuild -- --until 2026-10-01T12:00  # or only up to a point in time
 ```
 
-This writes `data/ratings.rebuilt.json` for you to check and copy over; it never overwrites `ratings.json`.
+Run `npm run backup` after a rating session to commit and push your ratings to GitHub.
+
+The rebuild writes `data/ratings.rebuilt.json` for you to check and copy over; it never overwrites `ratings.json`.
 In the browser, unsaved edits are kept in localStorage and retried until the dev server confirms them.
