@@ -432,3 +432,4 @@
 {"at":"2026-10-01T15:49:09.455Z","key":"795","rating":{"verdict":"should","updatedAt":"2026-10-01T15:49:09.038Z","scores":{"fun":8,"epic":6,"story":8,"acting":6,"visuals":4}}}
 {"at":"2026-10-01T15:49:10.090Z","key":"795","rating":{"verdict":"should","updatedAt":"2026-10-01T15:49:09.683Z","scores":{"fun":8,"epic":6,"story":8,"acting":6,"visuals":4,"audio":3}}}
 {"at":"2026-10-01T15:49:11.904Z","key":"795","rating":{"verdict":"should","updatedAt":"2026-10-01T15:49:11.498Z","scores":{"fun":8,"epic":6,"story":8,"acting":6,"visuals":4,"audio":3,"rewatch":4}}}
+{"at":"2026-10-01T16:21:48.543Z","key":"37165","rating":{"scores":{"fun":7,"epic":5,"story":8,"acting":7,"visuals":5,"audio":4,"rewatch":5,"holdsUp":4},"updatedAt":"2026-10-01T16:21:40.518Z","verdict":"should"},"by":"site"}
