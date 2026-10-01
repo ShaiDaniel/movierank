@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { SCORES, VERDICT_BY_ID, tmdbImage } from '../config';
-import { ADMIN } from '../data';
+import { useEditMode } from '../edit';
 import type { PersonRole } from '../filters';
 import type { Movie, Provider, Rating, Ratings, WatchlistEntry } from '../types';
 import { CopyFrom, copyRating } from './CopyFrom';
@@ -23,6 +23,7 @@ interface Props {
 }
 
 export function MovieModal({ movie, rating, movies, ratings, entry, onWatchlistChange, onRate, onClose, onStep, onPerson }: Props) {
+  const ADMIN = useEditMode() !== null;
   const [editing, setEditing] = useState(false);
   const [trailer, setTrailer] = useState(false);
 

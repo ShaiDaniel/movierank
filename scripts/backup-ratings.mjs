@@ -25,5 +25,13 @@ const ranked = Object.values(JSON.parse(fs.readFileSync(path.join(ROOT, 'data/ra
 ).length;
 git('add', '--', ...FILES);
 git('commit', '-m', `Ratings backup (${ranked} ranked)`);
+// Edits made on the public site are commits too: bring them in before pushing.
+try {
+  execFileSync('git', ['pull', '--rebase', '--autostash'], { cwd: ROOT, stdio: 'inherit' });
+} catch {
+  console.error('
+Could not merge with changes made on the site. Ask Claude to resolve it; nothing was pushed.');
+  process.exit(1);
+}
 execFileSync('git', ['push'], { cwd: ROOT, stdio: 'inherit' });
 console.log(`Backed up ${ranked} ranked movies to GitHub.`);

@@ -5,18 +5,21 @@ import { MovieCard } from './components/MovieCard';
 import { MovieModal } from './components/MovieModal';
 import { RateMode } from './components/RateMode';
 import { SITE } from './config';
+import { UnlockDialog } from './components/UnlockDialog';
 import {
-  ADMIN,
+  autoUnlock,
+  editMode,
   isEmptyRating,
-  loadCatalog,
-  loadRatings,
-  loadWatchlist,
-  loadWatchlistMovies,
+  loadAll,
+  lock,
   onSaveStatus,
+  saveNow,
   saveRating,
   saveWatchlistEntry,
+  type EditMode,
   type SaveStatus,
 } from './data';
+import { EditContext } from './edit';
 import { DEFAULT_FILTERS, PRESETS, activeFilterCount, applyFilters, parseFilters, serializeFilters, type Filters } from './filters';
 import type { Movie, Rating, Ratings, Watchlist, WatchlistEntry } from './types';
 
@@ -37,19 +40,24 @@ export function App() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [visible, setVisible] = useState(PAGE);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>({ state: 'saved', pending: 0 });
+  // A remembered device unlocks straight away.
+  const [mode, setMode] = useState<EditMode>(() => (autoUnlock(), editMode()));
+  const [unlocking, setUnlocking] = useState(false);
+  const ADMIN = mode !== null;
 
-  useEffect(() => (ADMIN ? onSaveStatus(setSaveStatus) : undefined), []);
+  useEffect(() => onSaveStatus(setSaveStatus), []);
 
+  // Reloads when editing is unlocked, to edit the latest data in the repo rather than the last deploy.
   useEffect(() => {
-    Promise.all([loadCatalog(), loadRatings(), loadWatchlistMovies(), loadWatchlist()])
-      .then(([m, r, wm, w]) => {
-        setMovies(m);
-        setRatings(r);
-        setWatchlistMovies(wm);
-        setWatchlist(w);
+    loadAll()
+      .then((d) => {
+        setMovies(d.movies);
+        setRatings(d.ratings);
+        setWatchlistMovies(d.watchlistMovies);
+        setWatchlist(d.watchlist);
       })
       .catch((e) => setError(String(e.message ?? e)));
-  }, []);
+  }, [mode]);
 
   // Keep the URL in sync so a filtered view (or an open movie) can be shared as a link.
   useEffect(() => {
@@ -151,6 +159,7 @@ export function App() {
   if (!movies) return <div className="center muted">Loading movies…</div>;
 
   return (
+    <EditContext.Provider value={mode}>
     <div className="app">
       <header className="top">
         <div className="brand">
@@ -179,14 +188,39 @@ export function App() {
         {ADMIN && (
           <span className={`save-status ${saveStatus.state}`}>
             {saveStatus.state === 'saved' ? '✓ Saved' : saveStatus.state === 'saving' ? 'Saving…' : '⚠ Not saved'}
+            {mode === 'github' && saveStatus.state === 'saving' && (
+              <button type="button" className="link" onClick={() => saveNow()}>
+                {' '}
+                save now
+              </button>
+            )}
           </span>
+        )}
+        {mode === 'github' && (
+          <button
+            type="button"
+            className="btn"
+            disabled={saveStatus.pending > 0}
+            title={saveStatus.pending ? 'Wait for changes to save first' : 'Stop editing on this device'}
+            onClick={() => {
+              lock();
+              setMode(null);
+            }}
+          >
+            Lock
+          </button>
+        )}
+        {!ADMIN && (
+          <button type="button" className="btn edit-btn" onClick={() => setUnlocking(true)}>
+            ✎ Edit
+          </button>
         )}
       </header>
 
       {ADMIN && saveStatus.state === 'failed' && (
         <div className="save-warning" role="alert">
-          ⚠ {saveStatus.pending} change{saveStatus.pending === 1 ? '' : 's'} not saved to disk — the dev server isn't reachable.
-          They're kept in this browser and will save automatically once <code>npm run dev</code> is running again.
+          ⚠ {saveStatus.pending} change{saveStatus.pending === 1 ? '' : 's'} not saved yet. {saveStatus.message} They're kept in
+          this browser and will save automatically.
         </div>
       )}
 
@@ -301,6 +335,17 @@ export function App() {
       )}
 
       {ADMIN && rateMode && <RateMode movies={movies} ratings={ratings} onRate={rate} onClose={() => setRateMode(false)} />}
+
+      {unlocking && (
+        <UnlockDialog
+          onUnlocked={() => {
+            setUnlocking(false);
+            setMode(editMode());
+          }}
+          onClose={() => setUnlocking(false)}
+        />
+      )}
     </div>
+    </EditContext.Provider>
   );
 }

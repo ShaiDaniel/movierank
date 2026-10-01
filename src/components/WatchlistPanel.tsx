@@ -1,4 +1,4 @@
-import { ADMIN } from '../data';
+import { useEditMode } from '../edit';
 import type { Priority, WatchlistEntry } from '../types';
 
 export const PRIORITIES: { id: Priority; label: string }[] = [
@@ -16,6 +16,7 @@ interface Props {
 
 /** Shown in the movie page for watchlist movies, instead of the verdict panel. */
 export function WatchlistPanel({ entry, onChange }: Props) {
+  const ADMIN = useEditMode() !== null;
   const update = (patch: Partial<WatchlistEntry>) =>
     onChange((prev) => ({ ...prev, ...patch, updatedAt: new Date().toISOString() }));
 

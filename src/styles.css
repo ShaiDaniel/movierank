@@ -282,3 +282,7 @@ kbd { padding: 1px 6px; border-radius: 4px; background: var(--panel-2); border: 
 .card-imdb b { font-weight: 800; }
 
 .card-avg { background: #000c; color: #fff; border: 1px solid #fff6; }
+.edit-btn { color: var(--muted); }
+.unlock-dialog { max-width: 420px; margin-top: 10vh; }
+.unlock-dialog .modal-content { padding: 24px; display: grid; gap: 12px; }
+.unlock-dialog input[type='password'] { width: 100%; padding: 8px 10px; border-radius: 8px; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); }
