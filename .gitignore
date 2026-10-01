@@ -1,0 +1,9 @@
+node_modules
+dist
+.env
+*.local
+# Trakt exports contain personal account data
+trakt-export-*.zip
+data/tmdb-cache/
+data/ratings.rebuilt.json
+data/ratings.json.tmp
