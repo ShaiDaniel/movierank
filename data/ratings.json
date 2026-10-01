@@ -350,6 +350,20 @@
   "updatedAt": "2026-10-01T15:12:56.503Z",
   "verdict": "must"
  },
+ "629": {
+  "verdict": "must",
+  "updatedAt": "2026-10-01T16:56:32.468Z",
+  "scores": {
+   "fun": 8,
+   "epic": 8,
+   "story": 7,
+   "acting": 8,
+   "visuals": 5,
+   "audio": 4,
+   "rewatch": 3,
+   "holdsUp": 6
+  }
+ },
  "637": {
   "scores": {
    "fun": 4,
