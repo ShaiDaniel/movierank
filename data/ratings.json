@@ -1186,7 +1186,7 @@
   }
  },
  "447365": {
-  "verdict": "must",
+  "verdict": "should",
   "scores": {
    "fun": 7,
    "epic": 4,
@@ -1197,7 +1197,7 @@
    "rewatch": 5,
    "holdsUp": 6
   },
-  "updatedAt": "2026-10-02T21:18:47.555Z"
+  "updatedAt": "2026-10-02T21:19:51.421Z"
  },
  "475557": {
   "verdict": "should",
