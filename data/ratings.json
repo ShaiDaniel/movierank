@@ -972,15 +972,15 @@
  },
  "118340": {
   "verdict": "must",
-  "updatedAt": "2026-10-02T21:17:48.241Z",
+  "updatedAt": "2026-10-02T21:20:18.870Z",
   "scores": {
-   "fun": 8,
+   "fun": 9,
    "epic": 5,
-   "story": 6,
+   "story": 7,
    "acting": 6,
    "visuals": 7,
    "audio": 10,
-   "rewatch": 7,
+   "rewatch": 8,
    "holdsUp": 7
   }
  },
@@ -1054,16 +1054,16 @@
  "283995": {
   "verdict": "must",
   "scores": {
-   "fun": 7,
+   "fun": 9,
    "epic": 4,
-   "story": 6,
+   "story": 7,
    "acting": 6,
    "visuals": 7,
    "audio": 8,
    "rewatch": 7,
    "holdsUp": 7
   },
-  "updatedAt": "2026-10-02T21:18:09.954Z"
+  "updatedAt": "2026-10-02T21:20:30.304Z"
  },
  "299534": {
   "verdict": "may",
