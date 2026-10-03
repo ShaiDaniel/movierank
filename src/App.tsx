@@ -4,6 +4,8 @@ import { FilterPanel } from './components/FilterPanel';
 import { MovieCard } from './components/MovieCard';
 import { MovieModal } from './components/MovieModal';
 import { RateMode } from './components/RateMode';
+import { RecentPage } from './components/RecentPage';
+import { StatsPage } from './components/StatsPage';
 import { SITE } from './config';
 import { UnlockDialog } from './components/UnlockDialog';
 import {
@@ -27,7 +29,8 @@ import type { Movie, Play, Rating, Ratings, Watches, Watchlist, WatchlistEntry }
 import { mergeWatched } from './watches';
 
 const PAGE = 120;
-type Tab = 'watched' | 'watchlist';
+type Tab = 'watched' | 'recent' | 'watchlist' | 'stats';
+const TABS: Tab[] = ['watched', 'recent', 'watchlist', 'stats'];
 
 export function App() {
   const [traktMovies, setTraktMovies] = useState<Movie[] | null>(null);
@@ -37,7 +40,10 @@ export function App() {
   const [watchlistMovies, setWatchlistMovies] = useState<Movie[]>([]);
   const [watchlist, setWatchlist] = useState<Watchlist>({});
   const [error, setError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>(() => (new URLSearchParams(location.search).get('tab') === 'watchlist' ? 'watchlist' : 'watched'));
+  const [tab, setTab] = useState<Tab>(() => {
+    const t = new URLSearchParams(location.search).get('tab') as Tab;
+    return TABS.includes(t) ? t : 'watched';
+  });
   const [filters, setFilters] = useState<Filters>(() => parseFilters(location.search));
   const [openKey, setOpenKey] = useState<string | null>(() => new URLSearchParams(location.search).get('m'));
   const [rateMode, setRateMode] = useState(false);
@@ -69,7 +75,7 @@ export function App() {
   // Keep the URL in sync so a filtered view (or an open movie) can be shared as a link.
   useEffect(() => {
     const params = serializeFilters(filters);
-    if (tab === 'watchlist') params.set('tab', 'watchlist');
+    if (tab !== 'watched') params.set('tab', tab);
     if (openKey) params.set('m', openKey);
     const qs = params.toString();
     history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
@@ -87,7 +93,8 @@ export function App() {
     [watchlistMovies, watchlist, watchedKeys],
   );
 
-  const current = tab === 'watched' ? (movies ?? []) : listed;
+  // Recent and Stats open movies from the Watched list.
+  const current = tab === 'watchlist' ? listed : (movies ?? []);
   const results = useMemo(
     () => applyFilters(current, ratings, filters, tab === 'watchlist' ? watchlist : undefined),
     [current, ratings, filters, tab, watchlist],
@@ -107,6 +114,14 @@ export function App() {
   }, [movies, visible, results]);
 
   const patch = (p: Partial<Filters>) => setFilters((f) => ({ ...f, ...p }));
+  /** "Show me this person's movies": the Watched grid, filtered to just them. */
+  const showPerson = (code: string) => {
+    setOpenKey(null);
+    if (tab === 'recent' || tab === 'stats') setTab('watched');
+    setFilters((f) => ({ ...DEFAULT_FILTERS, sort: f.sort, people: [code] }));
+    window.scrollTo({ top: 0 });
+  };
+
   const switchTab = (next: Tab) => {
     setTab(next);
     setFilters(DEFAULT_FILTERS);
@@ -214,7 +229,10 @@ export function App() {
           type="search"
           placeholder="Search title, director, actor…"
           value={filters.q}
-          onChange={(e) => patch({ q: e.target.value })}
+          onChange={(e) => {
+            if (tab === 'recent' || tab === 'stats') setTab('watched');
+            patch({ q: e.target.value });
+          }}
         />
         {ADMIN && (
           <>
@@ -274,8 +292,14 @@ export function App() {
         <button type="button" className={`tab ${tab === 'watched' ? 'active' : ''}`} onClick={() => switchTab('watched')}>
           Watched <span className="count">{movies.length}</span>
         </button>
+        <button type="button" className={`tab ${tab === 'recent' ? 'active' : ''}`} onClick={() => switchTab('recent')}>
+          Recent
+        </button>
         <button type="button" className={`tab ${tab === 'watchlist' ? 'active' : ''}`} onClick={() => switchTab('watchlist')}>
           Watchlist <span className="count">{listed.length}</span>
+        </button>
+        <button type="button" className={`tab ${tab === 'stats' ? 'active' : ''}`} onClick={() => switchTab('stats')}>
+          Stats
         </button>
       </nav>
 
@@ -289,6 +313,21 @@ export function App() {
         </nav>
       )}
 
+      {tab === 'recent' && (
+        <RecentPage movies={movies} ratings={ratings} onRate={rate} onOpen={setOpenKey} onPerson={showPerson} />
+      )}
+      {tab === 'stats' && (
+        <StatsPage
+          movies={movies}
+          ratings={ratings}
+          watchlist={watchlist}
+          watchlistCount={listed.length}
+          onOpen={setOpenKey}
+          onPerson={showPerson}
+        />
+      )}
+
+      {(tab === 'watched' || tab === 'watchlist') && (
       <div className="layout">
         <aside className={`sidebar ${filtersOpen ? 'open' : ''}`}>
           <div className="sidebar-head">
@@ -302,7 +341,7 @@ export function App() {
               Show {results.length} movies
             </button>
           </div>
-          <FilterPanel movies={current} ratings={ratings} filters={filters} onChange={patch} mode={tab} />
+          <FilterPanel movies={current} ratings={ratings} filters={filters} onChange={patch} mode={tab === 'watchlist' ? 'watchlist' : 'watched'} />
         </aside>
 
         <main>
@@ -341,6 +380,7 @@ export function App() {
           <div ref={sentinel} />
         </main>
       </div>
+      )}
 
       <footer className="footer">
         This product uses the TMDB API but is not endorsed or certified by TMDB. Streaming availability by JustWatch.
@@ -367,12 +407,7 @@ export function App() {
           onRate={(r) => rate(open.key, r)}
           onClose={closeModal}
           onStep={step}
-          onPerson={(code) => {
-            setOpenKey(null);
-            // "Show me this person's movies": start fresh rather than stacking on current filters.
-            setFilters((f) => ({ ...DEFAULT_FILTERS, sort: f.sort, people: [code] }));
-            window.scrollTo({ top: 0 });
-          }}
+          onPerson={showPerson}
         />
       )}
 

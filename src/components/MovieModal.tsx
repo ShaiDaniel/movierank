@@ -1,9 +1,10 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { SCORES, VERDICT_BY_ID, tmdbImage } from '../config';
+import { VERDICT_BY_ID, tmdbImage } from '../config';
 import { useEditMode } from '../edit';
 import type { PersonRole } from '../filters';
 import type { LoggedWatch, Movie, Play, Provider, Rating, Ratings, WatchlistEntry } from '../types';
 import { LoggedWatches } from './LoggedWatches';
+import { RatingSummary } from './RatingSummary';
 import { CopyFrom, copyRating } from './CopyFrom';
 import { RatingEditor } from './RatingEditor';
 import { WatchInfo } from './WatchInfo';
@@ -56,7 +57,6 @@ export function MovieModal({ movie, rating, movies, ratings, entry, onWatchlistC
   const verdict = rating?.verdict ? VERDICT_BY_ID[rating.verdict] : null;
   const backdrop = tmdbImage(movie.backdrop, 'w1280');
   const poster = tmdbImage(movie.poster, 'w342');
-  const scored = SCORES.filter((s) => rating?.scores?.[s.id] !== undefined);
 
   const people = (role: PersonRole, label: string, names: string[]) =>
     names.length > 0 && (
@@ -140,27 +140,8 @@ export function MovieModal({ movie, rating, movies, ratings, entry, onWatchlistC
                 <CopyFrom movie={movie} movies={movies} ratings={ratings} onCopy={(from) => onRate((prev) => copyRating(prev, from))} />
                 <RatingEditor value={rating} onChange={onRate} />
               </>
-            ) : verdict || scored.length || rating?.note || rating?.review ? (
-              <>
-                {verdict && <div className="verdict-big">{verdict.label}</div>}
-                {rating?.note && <p className="note">“{rating.note}”</p>}
-                {rating?.review && <p className="review">{rating.review}</p>}
-                {scored.length > 0 && (
-                  <div className="score-bars">
-                    {scored.map((s) => (
-                      <div key={s.id} className="score-bar" title={s.hint}>
-                        <span>{s.label}</span>
-                        <div className="bar">
-                          <div style={{ width: `${rating!.scores![s.id]! * 10}%` }} />
-                        </div>
-                        <b>{rating!.scores![s.id]}</b>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
             ) : (
-              <p className="muted">Not ranked yet.</p>
+              <RatingSummary rating={rating} />
             )}
             <WatchInfo movie={movie} rating={rating} />
             {ADMIN && <LoggedWatches movie={movie} watch={watch} onAdd={onLogWatch} onRemove={onRemoveWatch} />}
