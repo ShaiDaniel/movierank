@@ -825,6 +825,20 @@
    "holdsUp": 6
   }
  },
+ "11005": {
+  "verdict": "should",
+  "updatedAt": "2026-10-04T18:48:31.530Z",
+  "scores": {
+   "fun": 8,
+   "epic": 4,
+   "story": 9,
+   "acting": 9,
+   "visuals": 4,
+   "audio": 5,
+   "rewatch": 5,
+   "holdsUp": 8
+  }
+ },
  "11324": {
   "verdict": "should",
   "updatedAt": "2026-10-01T15:19:41.561Z",
