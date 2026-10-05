@@ -4,12 +4,12 @@
 
 /** Paste the firebaseConfig object from Firebase console → Project settings → Your apps. Empty = suggestions off. */
 export const FIREBASE_CONFIG = {
-  apiKey: '',
-  authDomain: '',
-  projectId: '',
-  storageBucket: '',
-  messagingSenderId: '',
-  appId: '',
+  apiKey: 'AIzaSyATCOm53Hmek9Meny-nyuyuXQwt-7UIRms',
+  authDomain: 'movierank-6eb00.firebaseapp.com',
+  projectId: 'movierank-6eb00',
+  storageBucket: 'movierank-6eb00.firebasestorage.app',
+  messagingSenderId: '978007905142',
+  appId: '1:978007905142:web:8e7703a6d2e38333f62057',
 };
 
 /** The Google account that may accept or dismiss suggestions (must match firestore.rules). */
