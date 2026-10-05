@@ -583,3 +583,4 @@
 {"at":"2026-10-05T20:02:17.177Z","key":"640146","rating":{"verdict":"should","scores":{"fun":7,"epic":6,"story":6,"acting":6,"visuals":7,"audio":4,"rewatch":5,"holdsUp":5},"updatedAt":"2026-10-05T20:02:08.355Z"},"by":"site"}
 {"at":"2026-10-05T20:02:56.717Z","key":"609681","rating":{"verdict":"maynot","updatedAt":"2026-10-05T20:02:47.828Z","scores":{"fun":6,"epic":2,"story":4,"acting":5,"visuals":5,"audio":4,"rewatch":3,"holdsUp":3}},"by":"site"}
 {"at":"2026-10-05T20:03:13.484Z","key":"533535","rating":{"verdict":"may","updatedAt":"2026-10-05T20:03:04.666Z","scores":{"fun":7,"epic":3,"story":6,"acting":5,"visuals":5,"audio":4,"rewatch":4,"holdsUp":4}},"by":"site"}
+{"at":"2026-10-05T20:03:44.724Z","key":"297761","rating":{"scores":{"fun":7,"epic":7,"story":6,"acting":5,"visuals":6,"audio":4,"rewatch":4,"holdsUp":4},"updatedAt":"2026-10-05T20:03:35.904Z","verdict":"may"},"by":"site"}
