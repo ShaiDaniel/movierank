@@ -6,6 +6,8 @@ import { MovieModal } from './components/MovieModal';
 import { RateMode } from './components/RateMode';
 import { RecentPage } from './components/RecentPage';
 import { StatsPage } from './components/StatsPage';
+import { SuggestionsPage } from './components/SuggestionsPage';
+import { loadSuggestions, suggestionsEnabled, watchViewer, type Suggestion, type Viewer } from './suggestions';
 import { SITE } from './config';
 import { UnlockDialog } from './components/UnlockDialog';
 import {
@@ -29,8 +31,8 @@ import type { Movie, Play, Rating, Ratings, Watches, Watchlist, WatchlistEntry }
 import { mergeWatched } from './watches';
 
 const PAGE = 120;
-type Tab = 'watched' | 'recent' | 'watchlist' | 'stats';
-const TABS: Tab[] = ['watched', 'recent', 'watchlist', 'stats'];
+type Tab = 'watched' | 'recent' | 'watchlist' | 'suggestions' | 'stats';
+const TABS: Tab[] = ['watched', 'recent', 'watchlist', 'suggestions', 'stats'];
 
 export function App() {
   const [traktMovies, setTraktMovies] = useState<Movie[] | null>(null);
@@ -55,6 +57,23 @@ export function App() {
   const [mode, setMode] = useState<EditMode>(() => (autoUnlock(), editMode()));
   const [unlocking, setUnlocking] = useState(false);
   const ADMIN = mode !== null;
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [viewer, setViewer] = useState<Viewer | null>(null);
+
+  const reloadSuggestions = useCallback(async () => {
+    try {
+      setSuggestions(await loadSuggestions());
+    } catch (e) {
+      console.error('Loading suggestions failed', e);
+    }
+  }, []);
+  useEffect(() => {
+    if (!suggestionsEnabled) return;
+    reloadSuggestions();
+    let unsubscribe: (() => void) | undefined;
+    watchViewer(setViewer).then((u) => (unsubscribe = u));
+    return () => unsubscribe?.();
+  }, [reloadSuggestions]);
 
   useEffect(() => onSaveStatus(setSaveStatus), []);
 
@@ -117,7 +136,7 @@ export function App() {
   /** "Show me this person's movies": the Watched grid, filtered to just them. */
   const showPerson = (code: string) => {
     setOpenKey(null);
-    if (tab === 'recent' || tab === 'stats') setTab('watched');
+    if (tab !== 'watched' && tab !== 'watchlist') setTab('watched');
     setFilters((f) => ({ ...DEFAULT_FILTERS, sort: f.sort, people: [code] }));
     window.scrollTo({ top: 0 });
   };
@@ -177,6 +196,23 @@ export function App() {
     });
   }, []);
 
+  /** Accepting a co-worker's suggestion puts it on the watchlist, crediting them. */
+  const acceptSuggestion = async (s: Suggestion) => {
+    const key = String(s.tmdb);
+    if (watchedKeys.has(key)) return;
+    const movie = watchlistMovies.find((m) => m.key === key) ?? (await fetchMovieDetails(s.tmdb, 'watchlist'));
+    setWatchlistMovies((all) => (all.some((m) => m.key === key) ? all : [...all, movie]));
+    updateWatchlist(key, (prev) => ({
+      ...prev,
+      ...(prev.removed ? { addedAt: new Date().toISOString(), source: 'site' as const } : {}),
+      removed: undefined,
+      title: movie.title,
+      year: movie.year,
+      why: prev.why ?? `Suggested by ${s.userName}${s.note ? `: ${s.note}` : ''}`,
+      updatedAt: new Date().toISOString(),
+    }));
+  };
+
   const addToWatchlist = (movie: Movie) => {
     setWatchlistMovies((all) => (all.some((m) => m.key === movie.key) ? all : [...all, movie]));
     updateWatchlist(movie.key, (prev) => ({
@@ -230,7 +266,7 @@ export function App() {
           placeholder="Search title, director, actor…"
           value={filters.q}
           onChange={(e) => {
-            if (tab === 'recent' || tab === 'stats') setTab('watched');
+            if (tab !== 'watched' && tab !== 'watchlist') setTab('watched');
             patch({ q: e.target.value });
           }}
         />
@@ -298,6 +334,14 @@ export function App() {
         <button type="button" className={`tab ${tab === 'watchlist' ? 'active' : ''}`} onClick={() => switchTab('watchlist')}>
           Watchlist <span className="count">{listed.length}</span>
         </button>
+        {suggestionsEnabled && (
+          <button type="button" className={`tab ${tab === 'suggestions' ? 'active' : ''}`} onClick={() => switchTab('suggestions')}>
+            Suggestions{' '}
+            {suggestions.some((x) => x.status === 'pending') && (
+              <span className="count">{suggestions.filter((x) => x.status === 'pending').length}</span>
+            )}
+          </button>
+        )}
         <button type="button" className={`tab ${tab === 'stats' ? 'active' : ''}`} onClick={() => switchTab('stats')}>
           Stats
         </button>
@@ -315,6 +359,20 @@ export function App() {
 
       {tab === 'recent' && (
         <RecentPage movies={movies} ratings={ratings} onRate={rate} onOpen={setOpenKey} onPerson={showPerson} />
+      )}
+      {tab === 'suggestions' && (
+        <SuggestionsPage
+          suggestions={suggestions}
+          viewer={viewer}
+          watched={watchedKeys}
+          listed={new Set(listed.map((m) => m.key))}
+          reload={reloadSuggestions}
+          onAccept={acceptSuggestion}
+          onOpen={(key, target) => {
+            switchTab(target);
+            setOpenKey(key);
+          }}
+        />
       )}
       {tab === 'stats' && (
         <StatsPage

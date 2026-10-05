@@ -13,6 +13,7 @@
     "edit:setup": "node --env-file=.env scripts/edit-setup.mjs"
   },
   "dependencies": {
+    "firebase": "^12.19.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
