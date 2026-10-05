@@ -55,7 +55,16 @@ export function App() {
     const t = new URLSearchParams(location.search).get('tab') as Tab;
     return TABS.includes(t) ? t : 'watched';
   });
-  const [filters, setFilters] = useState<Filters>(() => parseFilters(location.search));
+  // Each list keeps its own filters (movies, Shai's watchlist, TV), so moving between tabs
+  // or between Movies and TV doesn't lose them. Tabs without a grid show the Watched list's.
+  const viewKey = isTv ? 'tv' : tab === 'watchlist' ? 'watchlist' : 'movies';
+  const [filterViews, setFilterViews] = useState<Record<string, Filters>>(() => ({ [viewKey]: parseFilters(location.search) }));
+  const filters = filterViews[viewKey] ?? DEFAULT_FILTERS;
+  const setFilters = useCallback(
+    (next: Filters | ((prev: Filters) => Filters)) =>
+      setFilterViews((all) => ({ ...all, [viewKey]: typeof next === 'function' ? next(all[viewKey] ?? DEFAULT_FILTERS) : next })),
+    [viewKey],
+  );
   const [openKey, setOpenKey] = useState<string | null>(() => new URLSearchParams(location.search).get('m'));
   const [rateMode, setRateMode] = useState(false);
   const [adding, setAdding] = useState<AddPurpose | null>(null);
@@ -181,7 +190,6 @@ export function App() {
   const switchMedia = (next: 'movies' | 'tv') => {
     if (next === media) return;
     setMedia(next);
-    setFilters(DEFAULT_FILTERS);
     setOpenKey(null);
     if (next === 'tv' && !TV_TABS.includes(tab)) setTab('watched');
     window.scrollTo({ top: 0 });
@@ -189,7 +197,6 @@ export function App() {
 
   const switchTab = (next: Tab) => {
     setTab(next);
-    setFilters(DEFAULT_FILTERS);
     setOpenKey(null);
   };
 
@@ -499,10 +506,7 @@ export function App() {
           onLogWatch={async (play) => {
             await logWatch(open, play);
             // Seen it on the watchlist: it's now in Watched, so show it there.
-            if (tab === 'watchlist') {
-              setTab('watched');
-              setFilters(DEFAULT_FILTERS);
-            }
+            if (tab === 'watchlist') setTab('watched');
           }}
           onRemoveWatch={(at) => removeWatch(open.key, at)}
           onRate={(r) => rate(open.key, r)}
