@@ -1034,7 +1034,8 @@
    "rewatch": 6,
    "holdsUp": 6
   },
-  "updatedAt": "2026-10-05T19:53:15.285Z"
+  "updatedAt": "2026-10-05T19:55:59.381Z",
+  "verdict": "should"
  },
  "1865": {
   "verdict": "should",
@@ -1244,6 +1245,20 @@
    "rewatch": 4,
    "holdsUp": 6
   }
+ },
+ "10138": {
+  "verdict": "should",
+  "scores": {
+   "fun": 7,
+   "epic": 7,
+   "story": 6,
+   "acting": 6,
+   "visuals": 6,
+   "audio": 6,
+   "rewatch": 6,
+   "holdsUp": 6
+  },
+  "updatedAt": "2026-10-05T19:56:10.225Z"
  },
  "11005": {
   "verdict": "should",
