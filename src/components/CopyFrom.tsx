@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { VERDICT_BY_ID } from '../config';
+import { averageScore } from '../filters';
 import type { Movie, Rating, Ratings } from '../types';
 
 interface Props {
@@ -9,17 +10,27 @@ interface Props {
   onCopy: (from: Rating) => void;
 }
 
-/** Rated movies in the same TMDB collection, oldest first. */
+/** Something worth copying: a verdict or at least one score. */
+const hasRanks = (r: Rating | undefined) => Boolean(r?.verdict || Object.keys(r?.scores ?? {}).length);
+
+/** "Must watch", or "Avg 6.4" for a movie scored but not given a verdict yet. */
+function summary(r: Rating) {
+  if (r.verdict) return VERDICT_BY_ID[r.verdict].label;
+  const avg = averageScore(r);
+  return avg === null ? 'scores' : `Avg ${avg.toFixed(1)}, no verdict`;
+}
+
+/** Ranked movies in the same TMDB collection, oldest first. */
 export function seriesSources(movie: Movie, movies: Movie[], ratings: Ratings) {
   if (!movie.collection) return [];
   return movies
-    .filter((m) => m.collection === movie.collection && m.key !== movie.key && ratings[m.key]?.verdict)
+    .filter((m) => m.collection === movie.collection && m.key !== movie.key && hasRanks(ratings[m.key]))
     .sort((a, b) => a.year - b.year);
 }
 
 /** Copies the verdict and scores as independent values; notes and the date flag stay specific to each movie. */
 export function copyRating(target: Rating | undefined, from: Rating): Rating {
-  return { ...target, verdict: from.verdict, scores: { ...from.scores }, updatedAt: new Date().toISOString() };
+  return { ...target, verdict: from.verdict ?? target?.verdict, scores: { ...from.scores }, updatedAt: new Date().toISOString() };
 }
 
 export function CopyFrom({ movie, movies, ratings, onCopy }: Props) {
@@ -38,7 +49,7 @@ export function CopyFrom({ movie, movies, ratings, onCopy }: Props) {
     q.length < 2
       ? []
       : movies
-          .filter((m) => m.key !== movie.key && ratings[m.key]?.verdict && m.title.toLowerCase().includes(q))
+          .filter((m) => m.key !== movie.key && hasRanks(ratings[m.key]) && m.title.toLowerCase().includes(q))
           .slice(0, 8);
 
   const button = (m: Movie, hint?: string) => (
@@ -49,7 +60,7 @@ export function CopyFrom({ movie, movies, ratings, onCopy }: Props) {
       onClick={() => copy(m)}
       title={hint}
     >
-      Copy from {m.title} <span className="count">{VERDICT_BY_ID[ratings[m.key].verdict!].label}</span>
+      Copy from {m.title} <span className="count">{summary(ratings[m.key])}</span>
     </button>
   );
 
@@ -77,7 +88,7 @@ export function CopyFrom({ movie, movies, ratings, onCopy }: Props) {
                   onClick={() => copy(m)}
                 >
                   {m.title} ({m.year})
-                  <span className="muted small">{VERDICT_BY_ID[ratings[m.key].verdict!].label}</span>
+                  <span className="muted small">{summary(ratings[m.key])}</span>
                 </button>
               </li>
             ))}
