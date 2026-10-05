@@ -542,3 +542,17 @@ body { background: var(--bg); }
 @media (max-width: 900px) {
   .hero-dots { top: 14px; bottom: auto; right: 14px; }
 }
+
+/* About: what you can do */
+.about-do h2 { font-family: var(--display); font-weight: 400; font-size: 2.6rem; letter-spacing: 0.03em; margin-bottom: 4px; }
+.about-do h3 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); margin: 18px 0 8px; }
+.do-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+.do-card {
+  display: grid; gap: 6px; align-content: start; padding: 16px; border-radius: var(--radius);
+  background: var(--panel); border: 1px solid var(--border); transition: border-color 0.2s, transform 0.2s;
+}
+.do-card:hover { border-color: var(--muted); transform: translateY(-2px); }
+.do-card.signed-in { border-top: 3px solid var(--accent); }
+.do-card p { margin: 0; color: var(--muted); font-size: 0.88rem; }
+.do-icon { font-size: 1.5rem; line-height: 1; }
+.about { max-width: 1000px; }

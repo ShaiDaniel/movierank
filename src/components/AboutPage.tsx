@@ -13,6 +13,26 @@ const VERDICT_MEANING: Record<VerdictId, string> = {
   mustnot: 'Avoid. Life is short.',
 };
 
+const ANYONE = [
+  { icon: '🎬', title: 'Browse & filter', text: 'Filter by verdict, minimum scores, genre, director or actor, release years, watch date, and what streams in Israel. Sort by recommendation, IMDb, scores and more.' },
+  { icon: '🔎', title: 'Search', text: 'Search titles, directors, actors and the notes on each movie from the box at the top.' },
+  { icon: '🍿', title: 'Open a movie', text: 'See the verdict, scores and thoughts, the trailer, cast and crew, and where to watch it. Click any person to see all their movies.' },
+  { icon: '⭐', title: 'Featured picks', text: `The banner at the top cycles through ${SITE.owner}'s Must watch picks. Open one or play its trailer.` },
+  { icon: '🕒', title: 'Recent', text: `The last five movies ${SITE.owner} watched, with the full verdict.` },
+  { icon: '📋', title: `${SITE.owner}'s watchlist`, text: `What ${SITE.owner} plans to watch next, by priority and who recommended it.` },
+  { icon: '📊', title: 'Stats', text: `Watching habits, taste by genre and decade, favorite directors and actors, and how ${SITE.owner}'s taste compares with IMDb.` },
+  { icon: '🔗', title: 'Share a view', text: 'The address bar keeps your filters and the open movie, so you can send a link like "all Must watch thrillers".' },
+];
+
+const SIGNED_IN = [
+  { icon: '💡', title: 'Suggest a movie', text: `Know one ${SITE.owner} should see? Search it in Suggestions and say why.` },
+  { icon: '⚔', title: 'Challenge a verdict', text: 'Disagree with a verdict? Click ⚔ Challenge on the movie, pick the verdict you think it deserves, and ask for a rewatch.' },
+  { icon: '▲', title: 'Vote', text: 'Vote suggestions and challenges up or down; the most wanted rise to the top.' },
+  { icon: '💬', title: 'Discuss', text: `Join the discussion on any movie and say whether you agree or disagree with ${SITE.owner}'s verdict. ${SITE.owner} replies there too.` },
+  { icon: '🗨', title: 'Comment', text: 'Comment on suggestions and challenges.' },
+  { icon: '📌', title: 'Your own list', text: 'Click ＋ My list on any movie to save it to your private list, and tick it off once you have watched it.' },
+];
+
 /** Explains how to read the verdicts, scores and badges. */
 export function AboutPage() {
   return (
@@ -24,6 +44,40 @@ export function AboutPage() {
           before. Use it to decide what to watch: filter by verdict, scores, genre, actor, director or what's streaming in
           Israel. Movies not ranked yet show their IMDb rating so you still get a sense of them.
         </p>
+      </section>
+
+      <section className="about-do">
+        <h2>What you can do here</h2>
+
+        <h3>Anyone</h3>
+        <div className="do-grid">
+          {ANYONE.map((d) => (
+            <div key={d.title} className="do-card">
+              <span className="do-icon" aria-hidden="true">
+                {d.icon}
+              </span>
+              <b>{d.title}</b>
+              <p>{d.text}</p>
+            </div>
+          ))}
+        </div>
+
+        <h3>Signed in with Google</h3>
+        <p className="muted small">
+          Click <b>Sign in</b> at the top right. Suggestions, challenges, votes and discussions are public, with your name; your
+          list is private to you.
+        </p>
+        <div className="do-grid">
+          {SIGNED_IN.map((d) => (
+            <div key={d.title} className="do-card signed-in">
+              <span className="do-icon" aria-hidden="true">
+                {d.icon}
+              </span>
+              <b>{d.title}</b>
+              <p>{d.text}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section>
@@ -102,14 +156,6 @@ export function AboutPage() {
         </p>
       </section>
 
-      <section>
-        <h2>Joining in</h2>
-        <p>
-          Sign in with Google to <b>suggest a movie</b> {SITE.owner} hasn't seen, <b>challenge a verdict</b> you disagree with
-          (from the movie's page), <b>comment</b> on suggestions and challenges, and keep <b>your own list</b> of movies from this
-          site. Suggestions, challenges and comments are public; your list is private.
-        </p>
-      </section>
     </div>
   );
 }
