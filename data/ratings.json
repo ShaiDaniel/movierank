@@ -2231,6 +2231,20 @@
   "updatedAt": "2026-10-01T11:01:24.561Z",
   "verdict": "may"
  },
+ "245891": {
+  "verdict": "must",
+  "updatedAt": "2026-10-05T20:40:19.933Z",
+  "scores": {
+   "fun": 10,
+   "epic": 7,
+   "story": 3,
+   "acting": 7,
+   "visuals": 8,
+   "audio": 6,
+   "rewatch": 7,
+   "holdsUp": 7
+  }
+ },
  "246655": {
   "verdict": "should",
   "scores": {
