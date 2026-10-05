@@ -7,6 +7,8 @@ import { LoggedWatches } from './LoggedWatches';
 import { Discussion } from './Discussion';
 import { RatingSummary } from './RatingSummary';
 import { SeasonsPanel } from './SeasonsPanel';
+import { UNIVERSE_NAME } from '../../shared/universes.mjs';
+import { sagaName } from '../filters';
 import { StremioButton } from './StremioButton';
 import { ChallengeButton, ChallengePanel, MyListButton } from './SocialBits';
 import { averageScore } from '../filters';
@@ -33,9 +35,11 @@ interface Props {
   onClose: () => void;
   onStep: (delta: number) => void;
   onPerson: (code: string) => void;
+  /** Shows every movie in a saga or universe. */
+  onSaga: (code: string) => void;
 }
 
-export function MovieModal({ startWithTrailer, movie, rating, movies, ratings, entry, onWatchlistChange, watch, onLogWatch, onRemoveWatch, onRate, onClose, onStep, onPerson }: Props) {
+export function MovieModal({ startWithTrailer, movie, rating, movies, ratings, entry, onWatchlistChange, watch, onLogWatch, onRemoveWatch, onRate, onClose, onStep, onPerson, onSaga }: Props) {
   const ADMIN = useEditMode() !== null;
   const [editing, setEditing] = useState(false);
   const [trailer, setTrailer] = useState(false);
@@ -185,10 +189,14 @@ export function MovieModal({ startWithTrailer, movie, rating, movies, ratings, e
             {people('w', 'Writing', movie.writers.slice(0, 4))}
             {people('c', 'Music', movie.composers.slice(0, 3))}
             {people('p', 'Cinematography', movie.cinematographers.slice(0, 2))}
-            {movie.collection && (
+            {(movie.collection || movie.universes?.length) && (
               <div className="credit">
                 <span className="credit-label">Part of</span>
-                {movie.collection}
+                {[...(movie.universes ?? []).map((u) => `u:${u}`), ...(movie.collection ? [`c:${movie.collection}`] : [])].map((code) => (
+                  <button key={code} type="button" className="link" onClick={() => onSaga(code)}>
+                    {sagaName(code, UNIVERSE_NAME)}
+                  </button>
+                ))}
               </div>
             )}
           </div>

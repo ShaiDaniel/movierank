@@ -9,7 +9,8 @@
 
 import { dataFile, readJsonFile, writeJsonAtomic } from './store.mjs';
 import { refreshImdbRatings, withImdbRating } from './imdb.mjs';
-import { catalogEntry, findShowByTvdb, loadDetails, loadShowDetails } from './tmdb.mjs';
+import { catalogEntry, findShowByTvdb, loadDetails, loadShowDetails, tmdbFetch } from './tmdb.mjs';
+import { UNIVERSES } from '../shared/universes.mjs';
 
 const CONCURRENCY = 8;
 const refresh = process.argv.includes('--refresh');
@@ -19,6 +20,33 @@ try {
   await refreshImdbRatings();
 } catch (e) {
   console.warn(`IMDb ratings not updated (${e.message}); using the cached copy if there is one.`);
+}
+
+// Movies in each keyword-based universe (all pages of a TMDB discover query).
+const universeMembers = new Map();
+for (const u of UNIVERSES) {
+  const ids = new Set();
+  for (const keyword of u.keywords ?? []) {
+    for (let page = 1, pages = 1; page <= pages && page <= 20; page++) {
+      try {
+        const d = await tmdbFetch(token, `/discover/movie?with_keywords=${keyword}&include_adult=false&page=${page}`);
+        pages = d.total_pages;
+        for (const r of d.results) ids.add(r.id);
+      } catch (e) {
+        console.warn(`Universe ${u.name}: ${e.message}`);
+        break;
+      }
+    }
+  }
+  universeMembers.set(u.id, ids);
+}
+
+/** Tags a catalog entry with the shared universes it belongs to. */
+function withUniverses(entry) {
+  const universes = UNIVERSES.filter(
+    (u) => universeMembers.get(u.id)?.has(entry.ids?.tmdb) || (u.collections ?? []).includes(entry.collection),
+  ).map((u) => u.id);
+  return universes.length ? { ...entry, universes } : entry;
 }
 
 async function enrich(items, label) {
@@ -40,7 +68,7 @@ async function enrich(items, label) {
     }),
   );
   if (failed.length) console.log(`Failed (${failed.length}):\n  ${failed.join('\n  ')}`);
-  return items.map((m) => withImdbRating(catalogEntry(m, m.tmdb)));
+  return items.map((m) => withUniverses(withImdbRating(catalogEntry(m, m.tmdb))));
 }
 
 const watched = readJsonFile(dataFile('trakt-movies.json'), []);

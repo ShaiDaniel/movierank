@@ -579,3 +579,6 @@ body { background: var(--bg); }
 .season-note { display: grid; grid-template-columns: 34px 1fr; gap: 8px; align-items: center; font-size: 0.85rem; color: var(--muted); }
 .season-note input { padding: 6px 10px; border-radius: 8px; background: var(--panel-2); border: 1px solid var(--border); color: var(--text); }
 :root { --viz-series-1: #3987e5; }
+
+.universe-chip { border-color: #a78bfa88; }
+.universe-chip.selected { background: #a78bfa; border-color: #a78bfa; color: #111; }

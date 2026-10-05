@@ -49,6 +49,8 @@ export interface Movie {
   backdrop?: string | null;
   language?: string;
   collection?: string | null;
+  /** Shared universes spanning collections, e.g. 'mcu' (see shared/universes.mjs). */
+  universes?: string[];
   tmdbRating?: number | null;
   /** From IMDb's daily ratings dataset. */
   imdbRating?: number;

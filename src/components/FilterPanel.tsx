@@ -1,8 +1,9 @@
 import { useMemo, useState, type CSSProperties } from 'react';
 import { VERDICTS, isMajorStreamer, scoresFor } from '../config';
 import { PROGRESS_LABEL, progressOf } from '../progress';
+import { UNIVERSES, UNIVERSE_NAME } from '../../shared/universes.mjs';
 import type { Progress } from '../types';
-import { PERSON_ROLES, SORTS, verdictOf, WATCHLIST_SORTS, personNames, type Filters, type PersonRole, type SortKey, type VerdictFilter } from '../filters';
+import { PERSON_ROLES, SORTS, sagaName, verdictOf, WATCHLIST_SORTS, personNames, type Filters, type PersonRole, type SortKey, type VerdictFilter } from '../filters';
 import type { Movie, Ratings } from '../types';
 
 interface Props {
@@ -45,6 +46,17 @@ export function FilterPanel({ movies, ratings, filters, onChange, mode, kind }: 
       })),
     [movies],
   );
+  // Universes first, then every TMDB collection with 2+ movies here.
+  const sagas = useMemo(() => {
+    const universes = UNIVERSES.map((u) => [`u:${u.id}`, movies.filter((m) => m.universes?.includes(u.id)).length] as [string, number]).filter(
+      ([, n]) => n > 0,
+    );
+    const collections = countBy(movies.map((m) => m.collection).filter((c): c is string => Boolean(c)))
+      .filter(([, n]) => n >= 2)
+      .map(([c, n]) => [`c:${c}`, n] as [string, number]);
+    return { universes, collections };
+  }, [movies]);
+  const [allSagas, setAllSagas] = useState(false);
   const watchYears = useMemo(
     () => [...new Set(movies.flatMap((m) => m.plays.filter((p) => !p.backfilled).map((p) => p.at.slice(0, 4))))].sort().reverse(),
     [movies],
@@ -95,6 +107,38 @@ export function FilterPanel({ movies, ratings, filters, onChange, mode, kind }: 
               </button>
             ))}
           </div>
+        </section>
+      )}
+
+      {kind !== 'tv' && (sagas.universes.length > 0 || sagas.collections.length > 0) && (
+        <section>
+          <h4>Saga / universe</h4>
+          <div className="chips">
+            {[...sagas.universes, ...(allSagas ? sagas.collections : sagas.collections.slice(0, 14))].map(([code, n]) => (
+              <button
+                key={code}
+                type="button"
+                className={`chip ${code.startsWith('u:') ? 'universe-chip' : ''} ${filters.sagas.includes(code) ? 'selected' : ''}`}
+                onClick={() => onChange({ sagas: toggle(filters.sagas, code) })}
+              >
+                {sagaName(code, UNIVERSE_NAME)} <span className="count">{n}</span>
+              </button>
+            ))}
+            {/* Keep selected sagas visible even when the list is collapsed. */}
+            {!allSagas &&
+              filters.sagas
+                .filter((code) => code.startsWith('c:') && !sagas.collections.slice(0, 14).some(([c]) => c === code))
+                .map((code) => (
+                  <button key={code} type="button" className="chip selected" onClick={() => onChange({ sagas: toggle(filters.sagas, code) })}>
+                    {sagaName(code, UNIVERSE_NAME)} ×
+                  </button>
+                ))}
+          </div>
+          {sagas.collections.length > 14 && (
+            <button type="button" className="link small" onClick={() => setAllSagas((a) => !a)}>
+              {allSagas ? 'Show fewer' : `Show all ${sagas.collections.length} sagas`}
+            </button>
+          )}
         </section>
       )}
 

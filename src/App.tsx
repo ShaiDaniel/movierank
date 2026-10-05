@@ -509,6 +509,12 @@ export function App() {
           onClose={closeModal}
           onStep={step}
           onPerson={showPerson}
+          onSaga={(code) => {
+            setOpenKey(null);
+            if (tab !== 'watched' && tab !== 'watchlist') setTab('watched');
+            setFilters({ ...DEFAULT_FILTERS, sort: 'oldest', sagas: [code] });
+            window.scrollTo({ top: 0 });
+          }}
         />
       )}
 
