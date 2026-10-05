@@ -2193,6 +2193,20 @@
    "rewatch": 2
   }
  },
+ "505642": {
+  "verdict": "should",
+  "scores": {
+   "fun": 7,
+   "epic": 6,
+   "story": 7,
+   "acting": 7,
+   "visuals": 7,
+   "audio": 5,
+   "rewatch": 5,
+   "holdsUp": 5
+  },
+  "updatedAt": "2026-10-05T20:01:54.098Z"
+ },
  "508943": {
   "verdict": "should",
   "updatedAt": "2026-10-05T12:57:04.161Z",
