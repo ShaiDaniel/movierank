@@ -386,6 +386,20 @@
   },
   "updatedAt": "2026-10-05T20:15:05.927Z"
  },
+ "218": {
+  "verdict": "must",
+  "scores": {
+   "epic": 10,
+   "fun": 8,
+   "story": 7,
+   "acting": 7,
+   "visuals": 7,
+   "audio": 5,
+   "rewatch": 8,
+   "holdsUp": 6
+  },
+  "updatedAt": "2026-10-05T20:15:24.055Z"
+ },
  "238": {
   "scores": {
    "fun": 7,
