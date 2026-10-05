@@ -900,14 +900,16 @@
  },
  "1417": {
   "verdict": "may",
-  "updatedAt": "2026-10-05T12:58:24.996Z",
+  "updatedAt": "2026-10-05T12:58:35.624Z",
   "scores": {
    "fun": 6,
    "epic": 6,
    "story": 8,
    "acting": 7,
    "visuals": 7,
-   "audio": 6
+   "audio": 6,
+   "rewatch": 5,
+   "holdsUp": 5
   }
  },
  "1422": {
