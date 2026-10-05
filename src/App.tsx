@@ -31,6 +31,7 @@ import {
   type SaveStatus,
 } from './data';
 import { EditContext } from './edit';
+import { excludeThisBrowser, track } from './analytics';
 import { DEFAULT_FILTERS, activeFilterCount, applyFilters, parseFilters, serializeFilters, type Filters } from './filters';
 import type { Movie, Play, Rating, Ratings, Watches, Watchlist, WatchlistEntry } from './types';
 import { mergeWatched } from './watches';
@@ -102,6 +103,20 @@ export function App() {
       cancelled = true;
     };
   }, [isOwner]);
+
+  // The owner's own browsing isn't counted in the visit stats.
+  useEffect(() => {
+    if (social.viewer) excludeThisBrowser(isOwner);
+  }, [social.viewer, isOwner]);
+
+  // Usage events: which tabs and movies people open, and what they search for.
+  useEffect(() => track(`tab/${isTv ? 'tv/' : ''}${tab}`), [tab, isTv]);
+  useEffect(() => {
+    const q = filters.q.trim().toLowerCase();
+    if (q.length < 3) return;
+    const t = setTimeout(() => track(`search/${q}`), 1500);
+    return () => clearTimeout(t);
+  }, [filters.q]);
 
   // A save GitHub refuses means the stored token expired or was revoked: ask for a new one.
   useEffect(() => {
@@ -269,6 +284,10 @@ export function App() {
   const open =
     current.find((m) => m.key === openKey) ??
     (tab === 'mylist' ? [...watchlistMovies, ...(movies ?? []), ...shows].find((m) => m.key === openKey) : undefined);
+  const openTitle = open ? `${open.title} (${open.year})` : null;
+  useEffect(() => {
+    if (openTitle) track(`open/${openTitle}`, openTitle);
+  }, [openTitle]);
   const step = useCallback(
     (delta: number) => {
       const i = results.findIndex((m) => m.key === openKey);
