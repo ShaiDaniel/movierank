@@ -833,7 +833,22 @@
    "rewatch": 4,
    "holdsUp": 3
   },
-  "updatedAt": "2026-10-05T20:43:51.563Z"
+  "updatedAt": "2026-10-05T20:44:02.707Z",
+  "verdict": "may"
+ },
+ "657": {
+  "verdict": "may",
+  "scores": {
+   "epic": 9,
+   "fun": 7,
+   "story": 6,
+   "acting": 5,
+   "visuals": 4,
+   "audio": 6,
+   "rewatch": 4,
+   "holdsUp": 3
+  },
+  "updatedAt": "2026-10-05T20:44:08.400Z"
  },
  "670": {
   "scores": {
