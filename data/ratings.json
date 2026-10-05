@@ -13,6 +13,20 @@
   },
   "updatedAt": "2026-10-01T15:23:48.405Z"
  },
+ "12": {
+  "verdict": "may",
+  "updatedAt": "2026-10-05T05:01:11.140Z",
+  "scores": {
+   "fun": 8,
+   "epic": 6,
+   "story": 7,
+   "acting": 6,
+   "visuals": 6,
+   "audio": 5,
+   "rewatch": 5,
+   "holdsUp": 5
+  }
+ },
  "13": {
   "scores": {
    "fun": 9,
