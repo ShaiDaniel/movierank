@@ -1,10 +1,21 @@
-# Builds the site and publishes it to GitHub Pages on every push to main
-# (including `npm run backup`, so a backup is also a publish).
+# Builds the site and publishes it to GitHub Pages on pushes to main.
+# Edits saved from the site (ratings, watchlist, logged watches) don't need a deploy: the
+# live site reads those files straight from the repo (see USER_DATA in src/data.ts), so
+# pushes that only touch them are skipped. A push that also changes anything else deploys.
 name: Deploy site
 
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'data/ratings.json'
+      - 'data/ratings-history.jsonl'
+      - 'data/watchlist.json'
+      - 'data/watchlist-history.jsonl'
+      - 'data/watchlist-movies.json'
+      - 'data/watches.json'
+      - 'data/watches-history.jsonl'
+      - 'data/logged-movies.json'
   workflow_dispatch:
 
 permissions:

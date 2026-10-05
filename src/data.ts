@@ -26,7 +26,23 @@ try {
 
 type Collection = 'ratings' | 'watchlist' | 'watchlist-movies' | 'watches' | 'logged-movies';
 
+/**
+ * Files edited from the site. On the public site they're read straight from the repo, so a
+ * saved rating shows up (after GitHub's ~5 minute cache) without redeploying the site; the
+ * deploy workflow skips pushes that only touch these. The published copies are the fallback.
+ */
+const USER_DATA = new Set(['ratings', 'watchlist', 'watches', 'watchlist-movies', 'logged-movies']);
+const REPO_RAW = 'https://raw.githubusercontent.com/ShaiDaniel/movierank/main/data';
+
 async function getJson<T>(name: string): Promise<T> {
+  if (!import.meta.env.DEV && USER_DATA.has(name)) {
+    try {
+      const res = await fetch(`${REPO_RAW}/${name}.json`, { cache: 'no-store' });
+      if (res.ok) return await res.json();
+    } catch {
+      // Fall back to the published copy below.
+    }
+  }
   const res = await fetch(`${BASE}data/${name}.json`, { cache: 'no-store' });
   if (!res.ok) throw new Error(`Could not load ${name} (${res.status})`);
   return res.json();
@@ -208,9 +224,9 @@ async function flushLocal(id: string) {
   notify();
 }
 
-// GitHub mode: changes are batched into one commit, sent after a short pause in editing
-// (each commit redeploys the site, so one per rating would be wasteful).
-const GITHUB_QUIET_MS = 8000;
+// GitHub mode: changes are batched into one commit, sent after a pause in editing (or right
+// away when the tab is hidden or closed), so a rating session makes a few commits, not dozens.
+const GITHUB_QUIET_MS = 45000;
 let githubTimer: ReturnType<typeof setTimeout> | undefined;
 let committing = false;
 
