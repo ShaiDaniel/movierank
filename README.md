@@ -79,5 +79,5 @@ In the browser, unsaved edits are kept in localStorage and retried until the dev
 Sign in with Google as the owner (shai.daniel@gmail.com) and editing turns on: Rate mode, ratings,
 + Watched and + Watchlist. Changes are committed to this repo with a GitHub fine-grained token that is
 stored in Firestore at `owner/credentials`, readable only by the owner (see `firestore.rules`).
-The first sign-in asks once for the token (or the old passphrase, to move the previous one). When the
+The first sign-in asks once for the token. When the
 token expires, the site asks for a new one.
