@@ -1010,6 +1010,19 @@
   "updatedAt": "2026-10-01T15:37:36.979Z",
   "verdict": "may"
  },
+ "1724": {
+  "scores": {
+   "fun": 5,
+   "epic": 6,
+   "story": 5,
+   "acting": 4,
+   "visuals": 5,
+   "audio": 4,
+   "rewatch": 4,
+   "holdsUp": 4
+  },
+  "updatedAt": "2026-10-05T19:53:36.016Z"
+ },
  "1726": {
   "scores": {
    "fun": 7,
