@@ -483,7 +483,7 @@
   "verdict": "must"
  },
  "331": {
-  "verdict": "must",
+  "verdict": "may",
   "scores": {
    "fun": 8,
    "epic": 8,
@@ -494,7 +494,7 @@
    "rewatch": 5,
    "holdsUp": 5
   },
-  "updatedAt": "2026-10-05T20:12:05.505Z"
+  "updatedAt": "2026-10-05T20:12:35.708Z"
  },
  "348": {
   "verdict": "must",
@@ -1773,7 +1773,7 @@
   }
  },
  "135397": {
-  "verdict": "must",
+  "verdict": "should",
   "scores": {
    "fun": 8,
    "epic": 8,
@@ -1784,7 +1784,7 @@
    "rewatch": 5,
    "holdsUp": 5
   },
-  "updatedAt": "2026-10-05T20:12:12.150Z"
+  "updatedAt": "2026-10-05T20:12:30.098Z"
  },
  "140607": {
   "verdict": "should",
