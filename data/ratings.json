@@ -892,6 +892,20 @@
   },
   "updatedAt": "2026-10-05T20:44:41.971Z"
  },
+ "668": {
+  "verdict": "may",
+  "scores": {
+   "epic": 9,
+   "fun": 7,
+   "story": 6,
+   "acting": 5,
+   "visuals": 4,
+   "audio": 6,
+   "rewatch": 4,
+   "holdsUp": 3
+  },
+  "updatedAt": "2026-10-05T20:44:56.146Z"
+ },
  "670": {
   "scores": {
    "fun": 8,
@@ -1002,6 +1016,20 @@
   },
   "updatedAt": "2026-10-01T10:55:21.954Z",
   "verdict": "must"
+ },
+ "681": {
+  "verdict": "may",
+  "scores": {
+   "epic": 9,
+   "fun": 7,
+   "story": 6,
+   "acting": 5,
+   "visuals": 4,
+   "audio": 6,
+   "rewatch": 4,
+   "holdsUp": 3
+  },
+  "updatedAt": "2026-10-05T20:45:00.707Z"
  },
  "694": {
   "verdict": "may",
