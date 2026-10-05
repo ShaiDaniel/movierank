@@ -1867,6 +1867,20 @@
    "holdsUp": 4
   }
  },
+ "293167": {
+  "verdict": "may",
+  "updatedAt": "2026-10-05T20:06:41.883Z",
+  "scores": {
+   "fun": 8,
+   "epic": 8,
+   "story": 6,
+   "acting": 5,
+   "visuals": 7,
+   "audio": 5,
+   "rewatch": 4,
+   "holdsUp": 4
+  }
+ },
  "297761": {
   "scores": {
    "fun": 7,
@@ -2084,6 +2098,20 @@
    "holdsUp": 6
   },
   "updatedAt": "2026-10-05T20:00:10.904Z"
+ },
+ "373571": {
+  "verdict": "may",
+  "scores": {
+   "fun": 8,
+   "epic": 8,
+   "story": 6,
+   "acting": 5,
+   "visuals": 7,
+   "audio": 5,
+   "rewatch": 4,
+   "holdsUp": 4
+  },
+  "updatedAt": "2026-10-05T20:06:47.846Z"
  },
  "400928": {
   "verdict": "may",
