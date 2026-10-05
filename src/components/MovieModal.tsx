@@ -6,6 +6,7 @@ import type { LoggedWatch, Movie, Play, Provider, Rating, Ratings, WatchlistEntr
 import { LoggedWatches } from './LoggedWatches';
 import { Discussion } from './Discussion';
 import { RatingSummary } from './RatingSummary';
+import { StremioButton } from './StremioButton';
 import { ChallengeButton, ChallengePanel, MyListButton } from './SocialBits';
 import { averageScore } from '../filters';
 import { CopyFrom, copyRating } from './CopyFrom';
@@ -131,6 +132,7 @@ export function MovieModal({ startWithTrailer, movie, rating, movies, ratings, e
                     IMDb {movie.imdbRating !== undefined ? `★ ${movie.imdbRating.toFixed(1)}` : ''}
                   </a>
                 )}
+                {movie.ids.imdb && <StremioButton imdb={movie.ids.imdb} />}
                 {movie.ids.tmdb && (
                   <a className="btn" href={`https://www.themoviedb.org/movie/${movie.ids.tmdb}`} target="_blank" rel="noreferrer">
                     TMDB {movie.tmdbRating ? `★ ${movie.tmdbRating}` : ''}

@@ -556,3 +556,6 @@ body { background: var(--bg); }
 .do-card p { margin: 0; color: var(--muted); font-size: 0.88rem; }
 .do-icon { font-size: 1.5rem; line-height: 1; }
 .about { max-width: 1000px; }
+.stremio { display: inline-flex; align-items: center; gap: 6px; }
+.stremio-btn { border-color: #7b5bf5; color: #c4b5fd; }
+.stremio-btn:hover:not(:disabled) { border-color: #a78bfa; }
