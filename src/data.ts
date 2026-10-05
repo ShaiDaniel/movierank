@@ -1,11 +1,13 @@
 // All data access goes through here. Edits are saved one of two ways:
 //  - 'local':  the dev server (npm run dev) writes data/*.json on this PC;
-//  - 'github': on the public site, after unlocking with the passphrase, edits are
+//  - 'github': on the public site, when the owner is signed in with Google, edits are
 //              committed straight to the GitHub repo (batched), which redeploys the site.
+//              The GitHub token comes from Firestore, readable only by the owner.
 import { buildDataFiles, FILES } from '../shared/data-files.mjs';
 import { githubClient } from '../shared/github.mjs';
-import { catalogEntry, DETAILS_QUERY, searchMovies, tmdbFetch, trim } from '../shared/tmdb-core.mjs';
-import { decryptVault } from '../shared/vault.mjs';
+import { catalogEntry, DETAILS_QUERY, trim } from '../shared/tmdb-core.mjs';
+import { TMDB_PUBLIC_KEY } from './firebase-config';
+import { searchTmdbPublic } from './suggestions';
 import type { LoggedWatch, Movie, Rating, Ratings, SearchResult, Watches, Watchlist, WatchlistEntry } from './types';
 
 const BASE = import.meta.env.BASE_URL;
@@ -13,9 +15,14 @@ const BASE = import.meta.env.BASE_URL;
 export type EditMode = 'local' | 'github' | null;
 let mode: EditMode = import.meta.env.DEV ? 'local' : null;
 let github: ReturnType<typeof githubClient> | null = null;
-let tmdbToken: string | null = null;
 
 export const editMode = () => mode;
+
+try {
+  localStorage.removeItem('movierank:creds');
+} catch {
+  // Storage unavailable.
+}
 
 type Collection = 'ratings' | 'watchlist' | 'watchlist-movies' | 'watches' | 'logged-movies';
 
@@ -44,7 +51,7 @@ export async function loadAll(): Promise<SiteData> {
     } catch (e) {
       // E.g. an expired token: show the published data and say why saving won't work.
       console.error('Reading from GitHub failed', e);
-      failure = "Couldn't read from GitHub — the token may have expired. Run npm run edit:setup again.";
+      failure = "Couldn't read from GitHub — the saved token may have expired; you'll be asked for a new one.";
       notify();
       return getJson<T>(PUBLIC_NAME[name]);
     }
@@ -87,62 +94,24 @@ export function isEmptyRating(r: Rating | undefined) {
   return !r || (!r.verdict && !r.note?.trim() && !r.review?.trim() && !r.dateUncertain && !Object.keys(r.scores ?? {}).length);
 }
 
-// --- Unlocking (public site) ---------------------------------------------------
+// --- Owner editing (public site) ----------------------------------------------
 
-const CREDS_KEY = 'movierank:creds';
-interface Creds {
+export interface GithubCreds {
   github: string;
-  tmdb: string;
   repo: string;
   branch: string;
 }
 
-function activate(creds: Creds) {
+/** Turns on saving to GitHub; called when the owner signs in. */
+export function enableGithubEditing(creds: GithubCreds) {
   github = githubClient({ token: creds.github, repo: creds.repo, branch: creds.branch });
-  tmdbToken = creds.tmdb;
   mode = 'github';
 }
 
-/** Decrypts public/vault.json with the passphrase. Throws 'wrong-passphrase' if it doesn't match. */
-export async function unlock(passphrase: string, remember: boolean) {
-  const res = await fetch(`${BASE}vault.json`, { cache: 'no-store' });
-  if (!res.ok) throw new Error('Editing is not set up yet (run npm run edit:setup).');
-  let creds: Creds;
-  try {
-    creds = await decryptVault(await res.json(), passphrase);
-  } catch {
-    throw new Error('wrong-passphrase');
-  }
-  activate(creds);
-  try {
-    if (remember) localStorage.setItem(CREDS_KEY, JSON.stringify(creds));
-  } catch {
-    // Not remembered; unlocking still works for this visit.
-  }
-}
-
-/** Unlocks without asking, if this device was remembered. */
-export function autoUnlock(): boolean {
-  if (mode) return false;
-  try {
-    const stored = localStorage.getItem(CREDS_KEY);
-    if (!stored) return false;
-    activate(JSON.parse(stored));
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export function lock() {
-  try {
-    localStorage.removeItem(CREDS_KEY);
-  } catch {
-    // Nothing stored.
-  }
+/** Back to read-only, e.g. when the owner signs out. */
+export function disableGithubEditing() {
   github = null;
-  tmdbToken = null;
-  mode = null;
+  if (mode === 'github') mode = null;
 }
 
 // --- Saving -----------------------------------------------------------------
@@ -271,7 +240,7 @@ async function flushGithub() {
     const code = (e as { status?: number }).status;
     failure =
       code === 401 || code === 403
-        ? 'GitHub refused the save — the token may have expired. Run npm run edit:setup again.'
+        ? "GitHub refused the save — the saved token may have expired; you'll be asked for a new one."
         : "Couldn't save to GitHub (offline?). Retrying.";
     scheduleRetry();
   } finally {
@@ -332,7 +301,7 @@ if (typeof window !== 'undefined') {
 // --- Adding to the watchlist ---------------------------------------------------
 
 export async function searchTmdb(query: string): Promise<SearchResult[]> {
-  if (mode === 'github') return searchMovies(tmdbToken, query);
+  if (mode === 'github') return searchTmdbPublic(query);
   const res = await fetch(`/__admin/tmdb/search?q=${encodeURIComponent(query)}`);
   if (!res.ok) throw new Error(`Search failed (${res.status})`);
   return res.json();
@@ -341,7 +310,9 @@ export async function searchTmdb(query: string): Promise<SearchResult[]> {
 /** Full details for a movie being added; also stores it in that list's catalog. */
 export async function fetchMovieDetails(tmdbId: number, catalog: 'watchlist' | 'logged'): Promise<Movie> {
   if (mode === 'github') {
-    const details = trim(await tmdbFetch(tmdbToken, `/movie/${tmdbId}${DETAILS_QUERY}`));
+    const res = await fetch(`https://api.themoviedb.org/3/movie/${tmdbId}${DETAILS_QUERY}&api_key=${TMDB_PUBLIC_KEY}`);
+    if (!res.ok) throw new Error(`Could not load movie details (${res.status})`);
+    const details = trim(await res.json());
     const key = String(tmdbId);
     // The IMDb rating is filled in by the next `npm run sync`.
     const movie: Movie = catalogEntry({ key, title: key, year: null, ids: { tmdb: tmdbId, imdb: null } }, details);

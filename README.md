@@ -3,7 +3,8 @@
 Shai's verdicts on every movie watched, for co-workers deciding what to watch.
 
 **Live site:** https://shaidaniel.github.io/movierank/ — published by GitHub Actions on every push to `main`
-(so `npm run backup` also publishes). The public site is read-only; edit locally, then back up.
+(so `npm run backup` also publishes). Signed in with the owner's Google account, the site edits directly
+(each change is committed to the repo); everyone else gets a read-only site.
 
 ## Everyday use
 
@@ -72,3 +73,11 @@ Run `npm run backup` after a session to commit and push your ratings and watchli
 
 The rebuild writes `data/ratings.rebuilt.json` for you to check and copy over; it never overwrites `ratings.json`.
 In the browser, unsaved edits are kept in localStorage and retried until the dev server confirms them.
+
+## Editing on the public site
+
+Sign in with Google as the owner (shai.daniel@gmail.com) and editing turns on: Rate mode, ratings,
++ Watched and + Watchlist. Changes are committed to this repo with a GitHub fine-grained token that is
+stored in Firestore at `owner/credentials`, readable only by the owner (see `firestore.rules`).
+The first sign-in asks once for the token (or the old passphrase, to move the previous one). When the
+token expires, the site asks for a new one.

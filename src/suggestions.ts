@@ -280,3 +280,24 @@ export async function castVote(suggestionId: string, value: 1 | -1 | null) {
   if (value === null) await store.deleteDoc(ref);
   else await store.setDoc(ref, { value, userName: (u.displayName ?? u.email ?? 'Someone').slice(0, 100) });
 }
+
+// --- Owner credentials -------------------------------------------------------------
+// The GitHub token the owner's edits are committed with. Stored in Firestore at
+// owner/credentials, which the security rules let only the owner read or write.
+
+export interface OwnerCreds {
+  github: string;
+  repo: string;
+  branch: string;
+}
+
+export async function loadOwnerCreds(): Promise<OwnerCreds | null> {
+  const { store, db } = await services();
+  const snap = await store.getDoc(store.doc(db, 'owner', 'credentials'));
+  return snap.exists() ? (snap.data() as OwnerCreds) : null;
+}
+
+export async function saveOwnerCreds(creds: OwnerCreds) {
+  const { store, db } = await services();
+  await store.setDoc(store.doc(db, 'owner', 'credentials'), creds);
+}

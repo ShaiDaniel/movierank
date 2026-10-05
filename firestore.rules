@@ -75,6 +75,11 @@ service cloud.firestore {
       allow read: if true;
     }
 
+    // The GitHub token the owner's edits are saved with: the owner only, nobody else.
+    match /owner/{doc} {
+      allow read, write: if isOwner();
+    }
+
     // Each co-worker's own list: private to them.
     match /lists/{uid}/items/{movieKey} {
       allow read, delete: if signedIn() && request.auth.uid == uid;

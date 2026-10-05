@@ -11,15 +11,16 @@ import { AboutPage } from './components/AboutPage';
 import { MyListPage } from './components/MyListPage';
 import { AccountButton } from './components/SocialBits';
 import { useSocial } from './social';
+import { loadOwnerCreds } from './suggestions';
 import { SITE } from './config';
-import { UnlockDialog } from './components/UnlockDialog';
+import { OwnerSetup } from './components/OwnerSetup';
 import {
-  autoUnlock,
+  disableGithubEditing,
   editMode,
+  enableGithubEditing,
   fetchMovieDetails,
   isEmptyRating,
   loadAll,
-  lock,
   onSaveStatus,
   saveNow,
   saveRating,
@@ -57,11 +58,39 @@ export function App() {
   const [visible, setVisible] = useState(PAGE);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>({ state: 'saved', pending: 0 });
   // A remembered device unlocks straight away.
-  const [mode, setMode] = useState<EditMode>(() => (autoUnlock(), editMode()));
-  const [unlocking, setUnlocking] = useState(false);
+  // 'local' on the dev server; on the public site, editing turns on when the owner signs in.
+  const [mode, setMode] = useState<EditMode>(() => editMode());
+  const [ownerSetup, setOwnerSetup] = useState<'missing' | 'rejected' | null>(null);
   const ADMIN = mode !== null;
   const social = useSocial();
   const pendingSuggestions = social.suggestions.filter((x) => x.status === 'pending').length;
+  const isOwner = Boolean(social.viewer?.isOwner);
+
+  useEffect(() => {
+    if (import.meta.env.DEV) return; // the dev server edits local files instead
+    if (!isOwner) {
+      disableGithubEditing();
+      setMode(editMode());
+      return;
+    }
+    let cancelled = false;
+    loadOwnerCreds()
+      .then((creds) => {
+        if (cancelled) return;
+        if (!creds) return setOwnerSetup('missing');
+        enableGithubEditing(creds);
+        setMode(editMode());
+      })
+      .catch((e) => console.error('Loading editing credentials failed', e));
+    return () => {
+      cancelled = true;
+    };
+  }, [isOwner]);
+
+  // A save GitHub refuses means the stored token expired or was revoked: ask for a new one.
+  useEffect(() => {
+    if (isOwner && saveStatus.state === 'failed' && saveStatus.message?.includes('token')) setOwnerSetup('rejected');
+  }, [isOwner, saveStatus]);
 
 
   useEffect(() => onSaveStatus(setSaveStatus), []);
@@ -271,25 +300,6 @@ export function App() {
             )}
           </span>
         )}
-        {mode === 'github' && (
-          <button
-            type="button"
-            className="btn"
-            disabled={saveStatus.pending > 0}
-            title={saveStatus.pending ? 'Wait for changes to save first' : 'Stop editing on this device'}
-            onClick={() => {
-              lock();
-              setMode(null);
-            }}
-          >
-            Lock
-          </button>
-        )}
-        {!ADMIN && (
-          <button type="button" className="btn edit-btn" onClick={() => setUnlocking(true)}>
-            ✎ Edit
-          </button>
-        )}
       </header>
 
       {ADMIN && saveStatus.state === 'failed' && (
@@ -464,13 +474,15 @@ export function App() {
 
       {ADMIN && rateMode && <RateMode movies={movies} ratings={ratings} onRate={rate} onClose={() => setRateMode(false)} />}
 
-      {unlocking && (
-        <UnlockDialog
-          onUnlocked={() => {
-            setUnlocking(false);
+      {ownerSetup && (
+        <OwnerSetup
+          reason={ownerSetup}
+          onDone={(creds) => {
+            setOwnerSetup(null);
+            enableGithubEditing(creds);
             setMode(editMode());
           }}
-          onClose={() => setUnlocking(false)}
+          onClose={() => setOwnerSetup(null)}
         />
       )}
     </div>
