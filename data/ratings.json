@@ -964,6 +964,17 @@
    "visuals": 6
   }
  },
+ "2062": {
+  "verdict": "should",
+  "updatedAt": "2026-10-05T12:59:19.874Z",
+  "scores": {
+   "fun": 8,
+   "epic": 8,
+   "story": 7,
+   "acting": 5,
+   "visuals": 6
+  }
+ },
  "2277": {
   "verdict": "must",
   "updatedAt": "2026-10-04T18:47:54.324Z",
