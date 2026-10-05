@@ -341,6 +341,20 @@
    "rewatch": 6
   }
  },
+ "393": {
+  "verdict": "must",
+  "scores": {
+   "fun": 8,
+   "epic": 7,
+   "story": 7,
+   "acting": 7,
+   "visuals": 6,
+   "audio": 8,
+   "rewatch": 5,
+   "holdsUp": 7
+  },
+  "updatedAt": "2026-10-05T04:29:11.440Z"
+ },
  "424": {
   "scores": {
    "fun": 4,
