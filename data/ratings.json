@@ -1379,9 +1379,16 @@
  },
  "263115": {
   "scores": {
-   "fun": 6
+   "fun": 6,
+   "epic": 4,
+   "story": 5,
+   "acting": 6,
+   "visuals": 5,
+   "audio": 4,
+   "rewatch": 4,
+   "holdsUp": 5
   },
-  "updatedAt": "2026-10-05T12:54:45.666Z"
+  "updatedAt": "2026-10-05T12:55:04.726Z"
  },
  "283995": {
   "verdict": "must",
