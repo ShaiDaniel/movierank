@@ -19,6 +19,11 @@ const OUT = dataFile('trakt-movies.json');
 // or the "just now" bulk add of remembered movies on 2017-08-21/22.
 export const TRACKING_START = '2017-08-23';
 
+// A day with this many movies logged is a catch-up session of movies watched earlier,
+// not real watching (e.g. 22 movies logged on 2018-02-06), so those dates aren't real either.
+const BULK_DAY = 5;
+const localDay = (iso) => new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+
 function findZip() {
   const arg = process.argv[2];
   if (arg) return path.resolve(arg);
@@ -57,6 +62,17 @@ for (const item of history) {
 }
 
 const movies = [...byKey.values()];
+const perDay = new Map();
+for (const m of movies) for (const p of m.plays) perDay.set(localDay(p.at), (perDay.get(localDay(p.at)) ?? 0) + 1);
+let bulk = 0;
+for (const m of movies) {
+  for (const p of m.plays) {
+    if (!p.backfilled && perDay.get(localDay(p.at)) >= BULK_DAY) {
+      p.backfilled = true;
+      bulk++;
+    }
+  }
+}
 for (const m of movies) m.plays.sort((a, b) => b.at.localeCompare(a.at));
 movies.sort((a, b) => b.plays[0].at.localeCompare(a.plays[0].at));
 
@@ -67,7 +83,7 @@ const plays = movies.reduce((n, m) => n + m.plays.length, 0);
 const backfilled = movies.filter((m) => m.plays.every((p) => p.backfilled)).length;
 const noTmdb = movies.filter((m) => !m.ids.tmdb);
 console.log(`Imported ${movies.length} movies (${plays} plays) from ${path.basename(zipPath)}`);
-console.log(`  ${backfilled} watched only before tracking started (${TRACKING_START})`);
+console.log(`  ${backfilled} with no real watch date (before ${TRACKING_START}, or ${bulk} plays on bulk-logging days)`);
 if (noTmdb.length) console.log(`  ${noTmdb.length} without TMDB id: ${noTmdb.map((m) => m.title).join(', ')}`);
 
 // --- Watchlist ---------------------------------------------------------------

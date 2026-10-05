@@ -24,7 +24,8 @@ export const VERDICT_BY_ID = Object.fromEntries(VERDICTS.map((v) => [v.id, v])) 
 
 export const SCORES: { id: ScoreId; label: string; hint: string }[] = [
   { id: 'fun', label: 'Fun', hint: 'How much fun it is to watch' },
-  { id: 'epic', label: 'Epic', hint: 'Scale, grandeur, goosebumps' },
+  // Stored as 'epic' (the original name) so existing scores keep their meaning.
+  { id: 'epic', label: 'Iconic', hint: 'A canonical movie: a cultural reference point everyone should know' },
   { id: 'story', label: 'Story', hint: 'Script and plot' },
   { id: 'acting', label: 'Acting', hint: 'Performances' },
   { id: 'visuals', label: 'Visuals', hint: 'Cinematography and effects' },
@@ -32,6 +33,13 @@ export const SCORES: { id: ScoreId; label: string; hint: string }[] = [
   { id: 'rewatch', label: 'Rewatch', hint: 'Would you watch it again?' },
   { id: 'holdsUp', label: 'Holds up', hint: 'How well it has aged' },
 ];
+
+/**
+ * Streaming services shown on the site. Availability comes from JustWatch (via TMDB) for
+ * Israel; it also lists niche services most people don't have, so only the major ones show.
+ */
+export const MAJOR_STREAMERS = ['Netflix', 'HBO Max', 'Amazon Prime Video', 'Apple TV', 'Apple TV+', 'Disney Plus'];
+export const isMajorStreamer = (name: string) => MAJOR_STREAMERS.includes(name);
 
 export const tmdbImage = (path: string | null | undefined, size: 'w92' | 'w185' | 'w342' | 'w780' | 'w1280') =>
   path ? `https://image.tmdb.org/t/p/${size}${path}` : null;

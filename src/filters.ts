@@ -52,7 +52,7 @@ export interface Filters {
   people: string[];
   yearFrom: number | null;
   yearTo: number | null;
-  /** 'any', 'before' (before tracking) or a year like '2021'. */
+  /** 'any', 'before' (no real watch date) or a year like '2021'. */
   watched: string;
   stream: string[];
   sort: SortKey;
@@ -80,7 +80,7 @@ export const PRESETS: Preset[] = [
   { label: 'Everything', filters: {} },
   { label: 'Must watch', filters: { verdicts: ['must'] } },
   { label: 'Worth your time', filters: { verdicts: ['must', 'should', 'may'] } },
-  { label: 'Epic', filters: { min: { epic: 8 }, sort: 'score:epic' } },
+  { label: 'Iconic', filters: { min: { epic: 8 }, sort: 'score:epic' } },
   { label: 'Pure fun', filters: { min: { fun: 8 }, sort: 'score:fun' } },
   { label: 'Classics that hold up', filters: { yearTo: 1999, min: { holdsUp: 8 } } },
   { label: 'Avoid', filters: { verdicts: ['shouldnot', 'mustnot'] } },
@@ -145,6 +145,9 @@ export function personNames(m: Movie, role: PersonRole): string[] {
   return role === 'a' ? m.cast.map((c) => c.name) : m[PERSON_ROLES[role].field];
 }
 
+/** Matches TRACKING_START in scripts/import-trakt.mjs. */
+export const TRACKING_START = '2017-08-23';
+
 export const lastWatched = (m: Movie) => m.plays[0]?.at ?? '';
 export const onlyBackfilled = (m: Movie) => m.plays.every((p) => p.backfilled);
 
@@ -154,8 +157,14 @@ const VERDICT_RANK: Record<VerdictFilter, number> = {
   must: 0, should: 1, may: 2, neutral: 3, unrated: 4, maynot: 5, shouldnot: 6, mustnot: 7,
 };
 
+/** Scores left out of the average: how well a movie aged says nothing about how good it is. */
+const NOT_AVERAGED: ScoreId[] = ['holdsUp'];
+
 export function averageScore(r: Rating | undefined) {
-  const values = Object.values(r?.scores ?? {}).filter((v): v is number => typeof v === 'number');
+  const values = Object.entries(r?.scores ?? {})
+    .filter(([id]) => !NOT_AVERAGED.includes(id as ScoreId))
+    .map(([, v]) => v)
+    .filter((v): v is number => typeof v === 'number');
   return values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
 }
 

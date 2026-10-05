@@ -57,7 +57,9 @@ export function AboutPage() {
         </dl>
         <p className="muted small">
           <b>Holds up</b> matters most for older movies: some classics feel dated today, some feel timeless.{' '}
-          <b>Epic</b> is about scale and goosebumps, not quality — a small drama can be a Must watch with a low Epic score.
+          <b>Iconic</b> is about status, not quality: how canonical the movie is, a reference point people quote and build on.
+          A small drama can be a Must watch with a low Iconic score. <b>Holds up</b> isn't part of the average, since how well a
+          movie aged says nothing about how good it is.
         </p>
       </section>
 
@@ -74,16 +76,16 @@ export function AboutPage() {
           </div>
           <div>
             <dt>
-              <span className="card-epic">Epic 9</span>
+              <span className="card-epic">Iconic 9</span>
             </dt>
-            <dd>Shown when the Epic score is 8 or more.</dd>
+            <dd>Shown when the Iconic score is 8 or more.</dd>
           </div>
           <div>
             <dt>
               <span className="card-avg">Avg 7.4</span>
             </dt>
             <dd>
-              The average of {SITE.owner}'s scores for that movie. It runs about 2 points below IMDb across the board — an
+              The average of {SITE.owner}'s scores for that movie (all except Holds up). It runs about 2 points below IMDb across the board — an
               average of eight categories is naturally lower than a single overall rating — so compare it with other movies
               here rather than with IMDb.
             </dd>

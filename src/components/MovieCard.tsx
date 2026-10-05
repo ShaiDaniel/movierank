@@ -32,8 +32,8 @@ export function MovieCard({ movie, rating, entry, onOpen }: Props) {
         {((epic !== undefined && epic >= 8) || average !== null) && (
           <div className="card-badges-right">
             {epic !== undefined && epic >= 8 && (
-              <span className="card-epic" title={`Epic ${epic}/10`}>
-                Epic {epic}
+              <span className="card-epic" title={`Iconic ${epic}/10`}>
+                Iconic {epic}
               </span>
             )}
             {average !== null && (

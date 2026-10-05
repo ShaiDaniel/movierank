@@ -307,7 +307,7 @@ export function App() {
           Recent
         </button>
         <button type="button" className={`tab ${tab === 'watchlist' ? 'active' : ''}`} onClick={() => switchTab('watchlist')}>
-          Watchlist <span className="count">{listed.length}</span>
+          {SITE.owner}'s watchlist <span className="count">{listed.length}</span>
         </button>
         {social.enabled && (
           <button type="button" className={`tab ${tab === 'suggestions' ? 'active' : ''}`} onClick={() => switchTab('suggestions')}>
@@ -316,7 +316,7 @@ export function App() {
         )}
         {social.viewer && !social.viewer.isOwner && (
           <button type="button" className={`tab ${tab === 'mylist' ? 'active' : ''}`} onClick={() => switchTab('mylist')}>
-            My list <span className="count">{social.myList.length}</span>
+            {social.viewer.name.split(' ')[0]}'s list <span className="count">{social.myList.length}</span>
           </button>
         )}
         <button type="button" className={`tab ${tab === 'stats' ? 'active' : ''}`} onClick={() => switchTab('stats')}>
@@ -326,16 +326,6 @@ export function App() {
           About
         </button>
       </nav>
-
-      {tab === 'watched' && (
-        <nav className="presets" aria-label="Quick picks">
-          {PRESETS.map((p) => (
-            <button key={p.label} type="button" className="chip" onClick={() => setFilters({ ...DEFAULT_FILTERS, ...p.filters })}>
-              {p.label}
-            </button>
-          ))}
-        </nav>
-      )}
 
       {tab === 'recent' && (
         <RecentPage movies={movies} ratings={ratings} onRate={rate} onOpen={setOpenKey} onPerson={showPerson} />
@@ -380,6 +370,18 @@ export function App() {
               Show {results.length} movies
             </button>
           </div>
+          {tab === 'watched' && (
+            <section className="quick-picks">
+              <h4>Quick picks</h4>
+              <div className="chips">
+                {PRESETS.filter((p) => p.label !== 'Everything').map((p) => (
+                  <button key={p.label} type="button" className="chip" onClick={() => setFilters({ ...DEFAULT_FILTERS, ...p.filters })}>
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
           <FilterPanel movies={current} ratings={ratings} filters={filters} onChange={patch} mode={tab === 'watchlist' ? 'watchlist' : 'watched'} />
         </aside>
 

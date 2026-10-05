@@ -52,7 +52,8 @@ export function StatsPage({ movies, ratings, watchlist, watchlistCount, onOpen, 
             <figcaption>Movies watched per year</figcaption>
             <ColumnChart data={a.perYear} />
             <p className="chart-note">
-              Dated watches only. {a.beforeTracking} movies watched before {SITE.trackingStartLabel} have no real date.
+              Real watch dates only. {a.beforeTracking} movies have no real date: logged from memory before{' '}
+              {SITE.trackingStartLabel}, or in catch-up sessions (5+ movies logged the same day).
             </p>
           </figure>
           <figure>

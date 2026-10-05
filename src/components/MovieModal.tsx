@@ -1,11 +1,11 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { VERDICT_BY_ID, tmdbImage } from '../config';
+import { VERDICT_BY_ID, isMajorStreamer, tmdbImage } from '../config';
 import { useEditMode } from '../edit';
 import type { PersonRole } from '../filters';
 import type { LoggedWatch, Movie, Play, Provider, Rating, Ratings, WatchlistEntry } from '../types';
 import { LoggedWatches } from './LoggedWatches';
 import { RatingSummary } from './RatingSummary';
-import { ChallengePanel, MyListButton } from './SocialBits';
+import { ChallengeButton, ChallengePanel, MyListButton } from './SocialBits';
 import { averageScore } from '../filters';
 import { CopyFrom, copyRating } from './CopyFrom';
 import { RatingEditor } from './RatingEditor';
@@ -34,8 +34,12 @@ export function MovieModal({ movie, rating, movies, ratings, entry, onWatchlistC
   const ADMIN = useEditMode() !== null;
   const [editing, setEditing] = useState(false);
   const [trailer, setTrailer] = useState(false);
+  const [challenging, setChallenging] = useState(false);
 
-  useEffect(() => setTrailer(false), [movie.key]);
+  useEffect(() => {
+    setTrailer(false);
+    setChallenging(false);
+  }, [movie.key]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -130,6 +134,7 @@ export function MovieModal({ movie, rating, movies, ratings, entry, onWatchlistC
                   </a>
                 )}
                 <MyListButton movie={movie} />
+                <ChallengeButton rating={rating} onOpen={() => setChallenging(true)} />
                 {ADMIN && !entry && (
                   <button type="button" className="btn primary" onClick={() => setEditing((x) => !x)}>
                     {editing ? 'Done editing' : 'Edit rating'}
@@ -151,7 +156,7 @@ export function MovieModal({ movie, rating, movies, ratings, entry, onWatchlistC
             ) : (
               <>
                 <RatingSummary rating={rating} />
-                <ChallengePanel movie={movie} rating={rating} />
+                <ChallengePanel movie={movie} rating={rating} open={challenging} setOpen={setChallenging} />
               </>
             )}
             <WatchInfo movie={movie} rating={rating} />
@@ -193,7 +198,7 @@ export function MovieModal({ movie, rating, movies, ratings, entry, onWatchlistC
           <h3>Where to watch in Israel</h3>
           {movie.providers && (movie.providers.stream.length || movie.providers.rent.length || movie.providers.buy.length) ? (
             <div className="providers">
-              <ProviderRow label="Stream" list={movie.providers.stream} />
+              <ProviderRow label="Stream" list={movie.providers.stream.filter((p) => isMajorStreamer(p.name))} />
               <ProviderRow label="Rent" list={movie.providers.rent} />
               <ProviderRow label="Buy" list={movie.providers.buy} />
               <a className="small" href={movie.providers.link} target="_blank" rel="noreferrer">

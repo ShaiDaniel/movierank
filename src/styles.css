@@ -457,3 +457,5 @@ kbd { padding: 1px 6px; border-radius: 4px; background: var(--panel-2); border: 
   .suggestion { grid-template-columns: 36px 48px 1fr; }
   .suggestion-actions { grid-column: 1 / -1; }
 }
+.quick-picks { padding-bottom: 12px; }
+.quick-picks h4 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 8px; }

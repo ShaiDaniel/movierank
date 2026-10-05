@@ -11,7 +11,7 @@ export interface CastMember {
 
 export interface Play {
   at: string;
-  /** Logged from memory before tracking started, so the date isn't real. */
+  /** Logged later from memory (before tracking started, or on a bulk-logging day), so the date isn't real. */
   backfilled: boolean;
 }
 

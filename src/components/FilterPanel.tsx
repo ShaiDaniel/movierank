@@ -1,5 +1,5 @@
 import { useMemo, useState, type CSSProperties } from 'react';
-import { SCORES, VERDICTS } from '../config';
+import { SCORES, VERDICTS, isMajorStreamer } from '../config';
 import { PERSON_ROLES, SORTS, WATCHLIST_SORTS, personNames, type Filters, type PersonRole, type SortKey, type VerdictFilter } from '../filters';
 import type { Movie, Ratings } from '../types';
 
@@ -18,7 +18,18 @@ export function FilterPanel({ movies, ratings, filters, onChange, mode }: Props)
   const watched = mode === 'watched';
   const genres = useMemo(() => countBy(movies.flatMap((m) => m.genres)), [movies]);
   const streamers = useMemo(
-    () => countBy(movies.flatMap((m) => m.providers?.stream.map((p) => p.name) ?? [])).slice(0, 10),
+    () => countBy(movies.flatMap((m) => m.providers?.stream.map((p) => p.name).filter(isMajorStreamer) ?? [])),
+    [movies],
+  );
+  // The most frequent directors and (top-billed) actors, offered as one-click chips.
+  const topPeople = useMemo(
+    () =>
+      (['d', 'a'] as const).map((role) => ({
+        role,
+        list: countBy(movies.flatMap((m) => (role === 'a' ? m.cast.slice(0, 6).map((c) => c.name) : m.directors)))
+          .filter(([, n]) => n >= 3)
+          .slice(0, 12),
+      })),
     [movies],
   );
   const watchYears = useMemo(
@@ -56,7 +67,7 @@ export function FilterPanel({ movies, ratings, filters, onChange, mode }: Props)
       )}
 
       <section>
-        <h4>Director, actor, composer…</h4>
+        <h4>Search people</h4>
         <PeopleSearch movies={movies} selected={filters.people} onAdd={(code) => onChange({ people: [...filters.people, code] })} />
         {filters.people.length > 0 && (
           <div className="chips">
@@ -68,6 +79,29 @@ export function FilterPanel({ movies, ratings, filters, onChange, mode }: Props)
           </div>
         )}
       </section>
+
+      {topPeople.map(({ role, list }) =>
+        list.length ? (
+          <section key={role}>
+            <h4>{role === 'd' ? 'Common directors' : 'Common actors'}</h4>
+            <div className="chips">
+              {list.map(([name, n]) => {
+                const code = `${role}:${name}`;
+                return (
+                  <button
+                    key={code}
+                    type="button"
+                    className={`chip ${filters.people.includes(code) ? 'selected' : ''}`}
+                    onClick={() => onChange({ people: toggle(filters.people, code) })}
+                  >
+                    {name} <span className="count">{n}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        ) : null,
+      )}
 
       {watched && (
       <section>
@@ -155,7 +189,7 @@ export function FilterPanel({ movies, ratings, filters, onChange, mode }: Props)
                 In {y}
               </option>
             ))}
-            <option value="before">Before tracking</option>
+            <option value="before">Date unknown (logged later)</option>
           </select>
         </label>
         )}

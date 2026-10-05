@@ -112,10 +112,35 @@ export function MyListButton({ movie }: { movie: Movie }) {
   );
 }
 
-/** On a ranked movie's page: co-workers can disagree and ask for a rewatch. */
-export function ChallengePanel({ movie, rating }: { movie: Movie; rating?: Rating }) {
+/** "⚔ Challenge" in a ranked movie's action row, for co-workers (signs them in first if needed). */
+export function ChallengeButton({ rating, onOpen }: { rating?: Rating; onOpen: () => void }) {
+  const { enabled, viewer } = useSocial();
+  if (!enabled || !rating?.verdict || viewer?.isOwner) return null;
+  return (
+    <button
+      type="button"
+      className="btn challenge-btn"
+      title="Disagree with this verdict? Ask for a rewatch"
+      onClick={() => (viewer ? onOpen() : signIn().then(onOpen).catch(() => {}))}
+    >
+      ⚔ Challenge
+    </button>
+  );
+}
+
+/** On a ranked movie's page: existing challenges, and the form opened by ChallengeButton. */
+export function ChallengePanel({
+  movie,
+  rating,
+  open,
+  setOpen,
+}: {
+  movie: Movie;
+  rating?: Rating;
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}) {
   const { enabled, viewer, suggestions, reload } = useSocial();
-  const [open, setOpen] = useState(false);
   const [verdict, setVerdict] = useState<VerdictId | undefined>();
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
@@ -136,16 +161,9 @@ export function ChallengePanel({ movie, rating }: { movie: Movie; rating?: Ratin
           <span className="muted">— see Suggestions</span>
         </p>
       )}
-      {viewer && !viewer.isOwner && !mine && !sent && !open && (
-        <button type="button" className="link small" onClick={() => setOpen(true)}>
-          Disagree? Challenge this verdict
-        </button>
-      )}
-      {!viewer && (
-        <span className="muted small">Disagree? Sign in to challenge this verdict.</span>
-      )}
-      {sent && <p className="small">✓ Challenge sent. {SITE.owner} will see it in Suggestions.</p>}
-      {open && (
+      {sent && <p className="small">✓ Challenge sent. {SITE.owner} will see it in Suggestions → Challenges.</p>}
+      {open && mine && !sent && <p className="small">You've already challenged this verdict — see Suggestions → Challenges.</p>}
+      {open && !mine && !sent && viewer && (
         <div className="challenge-form">
           <span className="credit-label">I think it's</span>
           <div className="chips">
