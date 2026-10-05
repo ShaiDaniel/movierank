@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AddMovieDialog, type AddPurpose } from './components/AddMovieDialog';
+import { FeaturedHero } from './components/FeaturedHero';
 import { FilterPanel } from './components/FilterPanel';
 import { MovieCard } from './components/MovieCard';
 import { MovieModal } from './components/MovieModal';
@@ -12,7 +13,7 @@ import { MyListPage } from './components/MyListPage';
 import { AccountButton } from './components/SocialBits';
 import { useSocial } from './social';
 import { loadOwnerCreds } from './suggestions';
-import { SITE } from './config';
+import { SITE, tmdbImage } from './config';
 import { OwnerSetup } from './components/OwnerSetup';
 import {
   disableGithubEditing,
@@ -56,6 +57,8 @@ export function App() {
   const [adding, setAdding] = useState<AddPurpose | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [visible, setVisible] = useState(PAGE);
+  const [heroBackdrop, setHeroBackdrop] = useState<string | null>(null);
+  const [trailerFor, setTrailerFor] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>({ state: 'saved', pending: 0 });
   // A remembered device unlocks straight away.
   // 'local' on the dev server; on the public site, editing turns on when the owner signs in.
@@ -246,7 +249,10 @@ export function App() {
     },
     [results, openKey],
   );
-  const closeModal = useCallback(() => setOpenKey(null), []);
+  const closeModal = useCallback(() => {
+    setOpenKey(null);
+    setTrailerFor(null);
+  }, []);
   // E.g. a movie just removed from the watchlist: drop it from the URL too.
   useEffect(() => {
     if (movies && openKey && !open) setOpenKey(null);
@@ -254,6 +260,8 @@ export function App() {
 
   const ratedCount = movies ? movies.filter((m) => ratings[m.key]?.verdict).length : 0;
   const activeCount = activeFilterCount(filters);
+  // The page's ambient glow follows the open movie, else the featured one.
+  const ambient = tmdbImage(open?.backdrop ?? (tab === 'watched' ? heroBackdrop : null), 'w780');
 
   if (error) return <div className="center">Something went wrong: {error}</div>;
   if (!movies) return <div className="center muted">Loading movies…</div>;
@@ -261,6 +269,7 @@ export function App() {
   return (
     <EditContext.Provider value={mode}>
     <div className="app">
+      <div className="ambient" style={ambient ? { backgroundImage: `url(${ambient})` } : undefined} aria-hidden="true" />
       <header className="top">
         <div className="brand">
           <h1>{SITE.title}</h1>
@@ -341,6 +350,18 @@ export function App() {
           About
         </button>
       </nav>
+
+      {tab === 'watched' && activeCount === 0 && (
+        <FeaturedHero
+          movies={movies}
+          ratings={ratings}
+          onBackdrop={setHeroBackdrop}
+          onOpen={(key, withTrailer) => {
+            setTrailerFor(withTrailer ? key : null);
+            setOpenKey(key);
+          }}
+        />
+      )}
 
       {tab === 'recent' && (
         <RecentPage movies={movies} ratings={ratings} onRate={rate} onOpen={setOpenKey} onPerson={showPerson} />
@@ -432,6 +453,7 @@ export function App() {
 
       {open && (
         <MovieModal
+          startWithTrailer={trailerFor === open.key}
           movie={open}
           rating={ratings[open.key]}
           movies={movies}

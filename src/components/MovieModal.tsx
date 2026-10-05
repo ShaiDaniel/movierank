@@ -14,6 +14,8 @@ import { WatchInfo } from './WatchInfo';
 import { WatchlistPanel } from './WatchlistPanel';
 
 interface Props {
+  /** Open with the trailer already playing (e.g. from the featured banner). */
+  startWithTrailer?: boolean;
   movie: Movie;
   rating?: Rating;
   movies: Movie[];
@@ -31,16 +33,16 @@ interface Props {
   onPerson: (code: string) => void;
 }
 
-export function MovieModal({ movie, rating, movies, ratings, entry, onWatchlistChange, watch, onLogWatch, onRemoveWatch, onRate, onClose, onStep, onPerson }: Props) {
+export function MovieModal({ startWithTrailer, movie, rating, movies, ratings, entry, onWatchlistChange, watch, onLogWatch, onRemoveWatch, onRate, onClose, onStep, onPerson }: Props) {
   const ADMIN = useEditMode() !== null;
   const [editing, setEditing] = useState(false);
   const [trailer, setTrailer] = useState(false);
   const [challenging, setChallenging] = useState(false);
 
   useEffect(() => {
-    setTrailer(false);
+    setTrailer(Boolean(startWithTrailer));
     setChallenging(false);
-  }, [movie.key]);
+  }, [movie.key, startWithTrailer]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
