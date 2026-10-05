@@ -14,6 +14,7 @@ const VERDICT_MEANING: Record<VerdictId, string> = {
 };
 
 const ANYONE = [
+  { icon: '📺', title: 'Movies or TV', text: 'Switch between 🎬 Movies and 📺 TV at the top. Shows have their own verdicts, extra scores (Consistency, Ending, Bingeable), season notes, and progress: Finished, Caught up, Watching or Dropped.' },
   { icon: '🎬', title: 'Browse & filter', text: 'Filter by verdict, minimum scores, genre, director or actor, release years, watch date, and what streams in Israel. Sort by recommendation, IMDb, scores and more.' },
   { icon: '🔎', title: 'Search', text: 'Search titles, directors, actors and the notes on each movie from the box at the top.' },
   { icon: '🍿', title: 'Open a movie', text: 'See the verdict, scores and thoughts, the trailer, cast and crew, and where to watch it. Click any person to see all their movies.' },

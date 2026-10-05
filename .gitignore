@@ -8,3 +8,5 @@ data/tmdb-cache/
 data/ratings.rebuilt.json
 data/ratings.json.tmp
 data/imdb-cache/
+# TV Time export contains tokens and personal data
+tv-time*.zip

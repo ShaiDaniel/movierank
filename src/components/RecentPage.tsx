@@ -68,7 +68,7 @@ export function RecentPage({ movies, ratings, onRate, onOpen, onPerson }: Props)
                 <div className="credits">
                   {m.directors.length > 0 && (
                     <div className="credit">
-                      <span className="credit-label">Director</span>
+                      <span className="credit-label">{m.kind === 'tv' ? 'Created by' : 'Director'}</span>
                       {m.directors.map((n) => (
                         <button key={n} type="button" className="link" onClick={() => onPerson(`d:${n}`)}>
                           {n}
@@ -91,7 +91,7 @@ export function RecentPage({ movies, ratings, onRate, onOpen, onPerson }: Props)
                 {editing ? (
                   <>
                     <CopyFrom movie={m} movies={movies} ratings={ratings} onCopy={(from) => onRate(m.key, (prev) => copyRating(prev, from))} />
-                    <RatingEditor value={rating} onChange={(update) => onRate(m.key, update)} />
+                    <RatingEditor value={rating} onChange={(update) => onRate(m.key, update)} movie={m} />
                   </>
                 ) : (
                   <RatingSummary rating={rating} />

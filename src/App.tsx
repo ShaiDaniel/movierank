@@ -41,6 +41,10 @@ const TABS: Tab[] = ['watched', 'recent', 'watchlist', 'suggestions', 'mylist', 
 
 export function App() {
   const [traktMovies, setTraktMovies] = useState<Movie[] | null>(null);
+  const [shows, setShows] = useState<Movie[]>([]);
+  // Movies or TV: one switch for the whole site, kept in the URL (?k=tv).
+  const [media, setMedia] = useState<'movies' | 'tv'>(() => (new URLSearchParams(location.search).get('k') === 'tv' ? 'tv' : 'movies'));
+  const isTv = media === 'tv';
   const [watches, setWatches] = useState<Watches>({});
   const [loggedMovies, setLoggedMovies] = useState<Movie[]>([]);
   const [ratings, setRatings] = useState<Ratings>({});
@@ -105,6 +109,7 @@ export function App() {
       .then((d) => {
         if (stale) return;
         setTraktMovies(d.movies);
+        setShows(d.shows);
         setWatches(d.watches);
         setLoggedMovies(d.loggedMovies);
         setRatings(d.ratings);
@@ -120,11 +125,12 @@ export function App() {
   // Keep the URL in sync so a filtered view (or an open movie) can be shared as a link.
   useEffect(() => {
     const params = serializeFilters(filters);
+    if (isTv) params.set('k', 'tv');
     if (tab !== 'watched') params.set('tab', tab);
     if (openKey) params.set('m', openKey);
     const qs = params.toString();
     history.replaceState(null, '', qs ? `?${qs}` : location.pathname);
-  }, [filters, openKey, tab]);
+  }, [filters, openKey, tab, isTv]);
 
   // Watched = Trakt history plus watches logged on the site.
   const movies = useMemo(
@@ -140,7 +146,9 @@ export function App() {
   );
 
   // Recent and Stats open movies from the Watched list.
-  const current = tab === 'watchlist' ? listed : (movies ?? []);
+  // What the grid, Recent and Rate mode work on.
+  const catalog = isTv ? shows : (movies ?? []);
+  const current = !isTv && tab === 'watchlist' ? listed : catalog;
   const results = useMemo(
     () => applyFilters(current, ratings, filters, tab === 'watchlist' ? watchlist : undefined),
     [current, ratings, filters, tab, watchlist],
@@ -165,6 +173,17 @@ export function App() {
     setOpenKey(null);
     if (tab !== 'watched' && tab !== 'watchlist') setTab('watched');
     setFilters((f) => ({ ...DEFAULT_FILTERS, sort: f.sort, people: [code] }));
+    window.scrollTo({ top: 0 });
+  };
+
+  /** Tabs that exist for TV (watchlist, suggestions and stats are movies-only for now). */
+  const TV_TABS: Tab[] = ['watched', 'recent', 'mylist', 'about'];
+  const switchMedia = (next: 'movies' | 'tv') => {
+    if (next === media) return;
+    setMedia(next);
+    setFilters(DEFAULT_FILTERS);
+    setOpenKey(null);
+    if (next === 'tv' && !TV_TABS.includes(tab)) setTab('watched');
     window.scrollTo({ top: 0 });
   };
 
@@ -240,7 +259,9 @@ export function App() {
   };
 
   // My list can hold watched and watchlist movies, so fall back to both catalogs.
-  const open = current.find((m) => m.key === openKey) ?? (tab === 'mylist' ? watchlistMovies.find((m) => m.key === openKey) : undefined);
+  const open =
+    current.find((m) => m.key === openKey) ??
+    (tab === 'mylist' ? [...watchlistMovies, ...(movies ?? []), ...shows].find((m) => m.key === openKey) : undefined);
   const step = useCallback(
     (delta: number) => {
       const i = results.findIndex((m) => m.key === openKey);
@@ -258,7 +279,8 @@ export function App() {
     if (movies && openKey && !open) setOpenKey(null);
   }, [movies, openKey, open]);
 
-  const ratedCount = movies ? movies.filter((m) => ratings[m.key]?.verdict).length : 0;
+  const noun = isTv ? "shows" : "movies";
+  const ratedCount = catalog.filter((m) => ratings[m.key]?.verdict).length;
   const activeCount = activeFilterCount(filters);
   // The page's ambient glow follows the open movie, else the featured one.
   const ambient = tmdbImage(open?.backdrop ?? (tab === 'watched' ? heroBackdrop : null), 'w780');
@@ -274,7 +296,7 @@ export function App() {
         <div className="brand">
           <h1>{SITE.title}</h1>
           <p className="muted">
-            {SITE.owner}'s verdicts on {movies.length} movies · {ratedCount} ranked so far
+            {SITE.owner}'s verdicts on {catalog.length} {isTv ? 'TV shows' : 'movies'} · {ratedCount} ranked so far
           </p>
         </div>
         <input
@@ -287,7 +309,15 @@ export function App() {
             patch({ q: e.target.value });
           }}
         />
-        {ADMIN && (
+        <nav className="segmented media-switch" aria-label="Movies or TV">
+          <button type="button" className={!isTv ? 'active' : ''} onClick={() => switchMedia('movies')}>
+            🎬 Movies
+          </button>
+          <button type="button" className={isTv ? 'active' : ''} onClick={() => switchMedia('tv')}>
+            📺 TV
+          </button>
+        </nav>
+        {ADMIN && !isTv && (
           <>
             <button type="button" className="btn" onClick={() => setAdding('watched')}>
               + Watched
@@ -299,7 +329,7 @@ export function App() {
         )}
         {ADMIN && (
           <button type="button" className="btn primary" onClick={() => setRateMode(true)}>
-            Rate mode <span className="count">{movies.length - ratedCount} left</span>
+            Rate mode <span className="count">{catalog.length - ratedCount} left</span>
           </button>
         )}
         <AccountButton />
@@ -325,15 +355,17 @@ export function App() {
 
       <nav className="tabs" aria-label="Lists">
         <button type="button" className={`tab ${tab === 'watched' ? 'active' : ''}`} onClick={() => switchTab('watched')}>
-          Watched <span className="count">{movies.length}</span>
+          Watched <span className="count">{catalog.length}</span>
         </button>
         <button type="button" className={`tab ${tab === 'recent' ? 'active' : ''}`} onClick={() => switchTab('recent')}>
           Recent
         </button>
-        <button type="button" className={`tab ${tab === 'watchlist' ? 'active' : ''}`} onClick={() => switchTab('watchlist')}>
-          {SITE.owner}'s watchlist <span className="count">{listed.length}</span>
-        </button>
-        {social.enabled && (
+        {!isTv && (
+          <button type="button" className={`tab ${tab === 'watchlist' ? 'active' : ''}`} onClick={() => switchTab('watchlist')}>
+            {SITE.owner}'s watchlist <span className="count">{listed.length}</span>
+          </button>
+        )}
+        {social.enabled && !isTv && (
           <button type="button" className={`tab ${tab === 'suggestions' ? 'active' : ''}`} onClick={() => switchTab('suggestions')}>
             Suggestions {pendingSuggestions > 0 && <span className="count">{pendingSuggestions}</span>}
           </button>
@@ -343,9 +375,11 @@ export function App() {
             {social.viewer.name.split(' ')[0]}'s list <span className="count">{social.myList.length}</span>
           </button>
         )}
-        <button type="button" className={`tab ${tab === 'stats' ? 'active' : ''}`} onClick={() => switchTab('stats')}>
-          Stats
-        </button>
+        {!isTv && (
+          <button type="button" className={`tab ${tab === 'stats' ? 'active' : ''}`} onClick={() => switchTab('stats')}>
+            Stats
+          </button>
+        )}
         <button type="button" className={`tab ${tab === 'about' ? 'active' : ''}`} onClick={() => switchTab('about')}>
           About
         </button>
@@ -353,7 +387,8 @@ export function App() {
 
       {tab === 'watched' && activeCount === 0 && (
         <FeaturedHero
-          movies={movies}
+          key={media}
+          movies={catalog}
           ratings={ratings}
           onBackdrop={setHeroBackdrop}
           onOpen={(key, withTrailer) => {
@@ -364,7 +399,7 @@ export function App() {
       )}
 
       {tab === 'recent' && (
-        <RecentPage movies={movies} ratings={ratings} onRate={rate} onOpen={setOpenKey} onPerson={showPerson} />
+        <RecentPage movies={catalog} ratings={ratings} onRate={rate} onOpen={setOpenKey} onPerson={showPerson} />
       )}
       {tab === 'suggestions' && (
         <SuggestionsPage
@@ -378,7 +413,7 @@ export function App() {
         />
       )}
       {tab === 'mylist' && (
-        <MyListPage catalog={[...movies, ...watchlistMovies]} ratings={ratings} onOpen={setOpenKey} />
+        <MyListPage catalog={[...movies, ...watchlistMovies, ...shows]} ratings={ratings} onOpen={setOpenKey} />
       )}
       {tab === 'about' && <AboutPage />}
       {tab === 'stats' && (
@@ -403,10 +438,10 @@ export function App() {
               </button>
             )}
             <button type="button" className="btn sidebar-close" onClick={() => setFiltersOpen(false)}>
-              Show {results.length} movies
+              Show {results.length} {isTv ? "shows" : "movies"}
             </button>
           </div>
-          <FilterPanel movies={current} ratings={ratings} filters={filters} onChange={patch} mode={tab === 'watchlist' ? 'watchlist' : 'watched'} />
+          <FilterPanel movies={current} ratings={ratings} filters={filters} onChange={patch} mode={!isTv && tab === 'watchlist' ? 'watchlist' : 'watched'} kind={isTv ? 'tv' : undefined} />
         </aside>
 
         <main>
@@ -415,7 +450,7 @@ export function App() {
               Filters{activeCount ? ` (${activeCount})` : ''}
             </button>
             <span className="muted">
-              {results.length === current.length ? `${results.length} movies` : `${results.length} of ${current.length} movies`}
+              {results.length === current.length ? `${results.length} ${noun}` : `${results.length} of ${current.length} ${noun}`}
               {tab === 'watchlist' && ` ${SITE.owner} plans to watch`}
             </span>
           </div>
@@ -456,7 +491,7 @@ export function App() {
           startWithTrailer={trailerFor === open.key}
           movie={open}
           rating={ratings[open.key]}
-          movies={movies}
+          movies={catalog}
           ratings={ratings}
           entry={tab === 'watchlist' || !watchedKeys.has(open.key) ? watchlist[open.key] : undefined}
           onWatchlistChange={(update) => updateWatchlist(open.key, update)}
@@ -499,7 +534,7 @@ export function App() {
         />
       )}
 
-      {ADMIN && rateMode && <RateMode movies={movies} ratings={ratings} onRate={rate} onClose={() => setRateMode(false)} />}
+      {ADMIN && rateMode && <RateMode key={media} movies={catalog} ratings={ratings} onRate={rate} onClose={() => setRateMode(false)} />}
 
       {ownerSetup && (
         <OwnerSetup

@@ -1,5 +1,6 @@
 import { SCORES, VERDICTS } from './config';
-import type { Movie, Rating, ScoreId, VerdictId, Watchlist } from './types';
+import { progressOf } from './progress';
+import type { Movie, Progress, Rating, ScoreId, VerdictId, Watchlist } from './types';
 
 export type VerdictFilter = VerdictId | 'unrated';
 
@@ -62,6 +63,8 @@ export interface Filters {
   /** 'any', 'before' (no real watch date) or a year like '2021'. */
   watched: string;
   stream: string[];
+  /** TV: finished / caught up / watching / dropped. */
+  progress: Progress[];
   sort: SortKey;
 }
 
@@ -75,6 +78,7 @@ export const DEFAULT_FILTERS: Filters = {
   yearTo: null,
   watched: 'any',
   stream: [],
+  progress: [],
   sort: 'rec',
 };
 
@@ -100,6 +104,7 @@ export function parseFilters(search: string): Filters {
     yearTo: num(p.get('to')),
     watched: p.get('w') ?? 'any',
     stream: list(p.get('s')),
+    progress: list(p.get('pr')).filter((x): x is Progress => ['finished', 'caughtup', 'watching', 'dropped'].includes(x)),
     sort: sort && [...SORTS, ...WATCHLIST_SORTS].some((s) => s.id === sort) ? sort : 'rec',
   };
 }
@@ -116,6 +121,7 @@ export function serializeFilters(f: Filters): URLSearchParams {
   if (f.yearTo) p.set('to', String(f.yearTo));
   if (f.watched !== 'any') p.set('w', f.watched);
   if (f.stream.length) p.set('s', f.stream.join('|'));
+  if (f.progress.length) p.set('pr', f.progress.join('|'));
   if (f.sort !== 'rec') p.set('sort', f.sort);
   return p;
 }
@@ -130,7 +136,8 @@ export function activeFilterCount(f: Filters) {
     (f.yearFrom ? 1 : 0) +
     (f.yearTo ? 1 : 0) +
     (f.watched !== 'any' ? 1 : 0) +
-    f.stream.length
+    f.stream.length +
+    f.progress.length
   );
 }
 
@@ -187,6 +194,10 @@ export function applyFilters(movies: Movie[], ratings: Record<string, Rating>, f
     if (f.watched === 'before' && !onlyBackfilled(m)) return false;
     if (/^\d{4}$/.test(f.watched) && !m.plays.some((p) => !p.backfilled && p.at.startsWith(f.watched))) return false;
     if (f.stream.length && !f.stream.some((s) => m.providers?.stream.some((p) => p.name === s))) return false;
+    if (f.progress.length) {
+      const p = progressOf(m, r);
+      if (!p || !f.progress.includes(p.state)) return false;
+    }
     if (q) {
       const haystack = [m.title, m.originalTitle ?? '', m.collection ?? '', r?.note ?? '', r?.review ?? '', watchlist?.[m.key]?.why ?? '', ...m.directors, ...m.cast.map((c) => c.name)];
       if (!haystack.some((h) => normalize(h).includes(q))) return false;

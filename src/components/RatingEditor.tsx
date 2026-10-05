@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
-import { SCORES, VERDICTS } from '../config';
-import type { Rating, ScoreId } from '../types';
+import { VERDICTS, scoresFor } from '../config';
+import { PROGRESS_LABEL } from '../progress';
+import type { Movie, Progress, Rating, ScoreId } from '../types';
 
 interface Props {
   value: Rating | undefined;
@@ -9,10 +10,14 @@ interface Props {
   /** Row highlighted for keyboard input in rate mode: 0 = verdict, 1.. = scores. */
   activeRow?: number;
   onRowClick?: (row: number) => void;
+  /** The movie or show being rated: shows get TV scores, season notes and a progress override. */
+  movie?: Movie;
 }
 
-export function RatingEditor({ value, onChange, activeRow, onRowClick }: Props) {
+export function RatingEditor({ value, onChange, activeRow, onRowClick, movie }: Props) {
   const r = value ?? {};
+  const scores = scoresFor(movie?.kind);
+  const seasons = (movie?.tv?.seasons ?? []).filter((s) => s.episodes > 0);
   const update = (change: (prev: Rating) => Partial<Rating>) =>
     onChange((prev) => ({ ...prev, ...change(prev), updatedAt: new Date().toISOString() }));
   const setScore = (id: ScoreId, v: number) =>
@@ -40,7 +45,7 @@ export function RatingEditor({ value, onChange, activeRow, onRowClick }: Props) 
         ))}
       </div>
 
-      {SCORES.map((s, i) => {
+      {scores.map((s, i) => {
         const current = r.scores?.[s.id];
         return (
           <div
@@ -97,6 +102,48 @@ export function RatingEditor({ value, onChange, activeRow, onRowClick }: Props) 
           }}
         />
       </label>
+      {movie?.tv && (
+        <div className="season-notes">
+          <label className="field">
+            <span>Progress (worked out from episodes watched, unless you set it)</span>
+            <select
+              value={r.progress ?? ''}
+              onChange={(e) => {
+                const progress = (e.target.value || undefined) as Progress | undefined;
+                update(() => ({ progress }));
+              }}
+            >
+              <option value="">Automatic</option>
+              {(Object.keys(PROGRESS_LABEL) as Progress[]).map((p) => (
+                <option key={p} value={p}>
+                  {PROGRESS_LABEL[p]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <span className="field-title">Season notes (optional)</span>
+          {seasons.map((season) => (
+            <label key={season.n} className="season-note">
+              <span>S{season.n}</span>
+              <input
+                type="text"
+                maxLength={140}
+                placeholder={season.n === 1 ? 'e.g. Slow start, push through' : ''}
+                value={r.seasons?.[season.n] ?? ''}
+                onChange={(e) => {
+                  const text = e.target.value;
+                  update((prev) => {
+                    const notes = { ...prev.seasons };
+                    if (text) notes[season.n] = text;
+                    else delete notes[season.n];
+                    return { seasons: Object.keys(notes).length ? notes : undefined };
+                  });
+                }}
+              />
+            </label>
+          ))}
+        </div>
+      )}
       <label className="check">
         <input
           type="checkbox"

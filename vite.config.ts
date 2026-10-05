@@ -14,6 +14,7 @@ const PUBLIC_DATA: Record<string, unknown> = {
   'watchlist-movies': [],
   watches: {},
   'logged-movies': [],
+  shows: [],
 };
 /** Files the admin UI may edit, one entry at a time. */
 const EDITABLE = new Set(['ratings', 'watchlist', 'watches']);

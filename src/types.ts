@@ -13,11 +13,28 @@ export interface Play {
   at: string;
   /** Logged later from memory (before tracking started, or on a bulk-logging day), so the date isn't real. */
   backfilled: boolean;
+  /** TV: episodes watched that day. */
+  episodes?: number;
 }
 
-/** One entry of data/movies.json, produced by scripts/enrich-tmdb.mjs. */
+export interface TvInfo {
+  status: string;
+  network: string | null;
+  seasons: { n: number; episodes: number; airDate: string | null }[];
+  /** Regular episodes aired so far, and how many of them were watched. */
+  aired: number;
+  seen: number;
+  perSeason: Record<string, number>;
+  lastAirDate: string | null;
+  nextAirDate: string | null;
+}
+
+/** One entry of data/movies.json (or data/shows.json for TV), produced by scripts/enrich-tmdb.mjs. */
 export interface Movie {
   key: string;
+  /** Set for TV shows; movies have none. */
+  kind?: 'tv';
+  tv?: TvInfo;
   ids: { trakt?: number; tmdb: number | null; imdb: string | null; slug?: string };
   plays: Play[];
   year: number;
@@ -50,7 +67,21 @@ export interface Movie {
 
 export type VerdictId = 'must' | 'should' | 'may' | 'neutral' | 'maynot' | 'shouldnot' | 'mustnot';
 
-export type ScoreId = 'fun' | 'epic' | 'story' | 'acting' | 'visuals' | 'audio' | 'rewatch' | 'holdsUp';
+export type ScoreId =
+  | 'fun'
+  | 'epic'
+  | 'story'
+  | 'acting'
+  | 'visuals'
+  | 'audio'
+  | 'rewatch'
+  | 'holdsUp'
+  // TV only
+  | 'consistency'
+  | 'ending'
+  | 'binge';
+
+export type Progress = 'finished' | 'caughtup' | 'watching' | 'dropped';
 
 export interface Rating {
   verdict?: VerdictId;
@@ -61,6 +92,10 @@ export interface Rating {
   review?: string;
   /** The watch date in Trakt may not be when it was really watched. */
   dateUncertain?: boolean;
+  /** TV: a one-line note per season, keyed by season number. */
+  seasons?: Record<string, string>;
+  /** TV: overrides the progress worked out from the episodes watched. */
+  progress?: Progress;
   updatedAt?: string;
 }
 

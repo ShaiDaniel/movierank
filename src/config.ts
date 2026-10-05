@@ -22,7 +22,7 @@ export const VERDICT_BY_ID = Object.fromEntries(VERDICTS.map((v) => [v.id, v])) 
   (typeof VERDICTS)[number]
 >;
 
-export const SCORES: { id: ScoreId; label: string; hint: string }[] = [
+export const SCORES: { id: ScoreId; label: string; hint: string; tvOnly?: boolean }[] = [
   { id: 'fun', label: 'Fun', hint: 'How much fun it is to watch' },
   // Stored as 'epic' (the original name) so existing scores keep their meaning.
   { id: 'epic', label: 'Iconic', hint: 'A canonical movie: a cultural reference point everyone should know' },
@@ -32,7 +32,13 @@ export const SCORES: { id: ScoreId; label: string; hint: string }[] = [
   { id: 'audio', label: 'Audio', hint: 'Soundtrack and sound design' },
   { id: 'rewatch', label: 'Rewatch', hint: 'Would you watch it again?' },
   { id: 'holdsUp', label: 'Holds up', hint: 'How well it has aged' },
+  { id: 'consistency', label: 'Consistency', hint: 'Stays good across seasons, or falls off?', tvOnly: true },
+  { id: 'ending', label: 'Ending', hint: 'How well it ends (or the latest season, if still running)', tvOnly: true },
+  { id: 'binge', label: 'Bingeable', hint: 'How hard it is to stop after one episode', tvOnly: true },
 ];
+
+/** The scores that apply to a movie or a show. */
+export const scoresFor = (kind?: 'tv') => SCORES.filter((s) => kind === 'tv' || !s.tvOnly);
 
 /**
  * Streaming services shown on the site. Availability comes from JustWatch (via TMDB) for

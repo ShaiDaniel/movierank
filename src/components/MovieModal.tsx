@@ -6,6 +6,7 @@ import type { LoggedWatch, Movie, Play, Provider, Rating, Ratings, WatchlistEntr
 import { LoggedWatches } from './LoggedWatches';
 import { Discussion } from './Discussion';
 import { RatingSummary } from './RatingSummary';
+import { SeasonsPanel } from './SeasonsPanel';
 import { StremioButton } from './StremioButton';
 import { ChallengeButton, ChallengePanel, MyListButton } from './SocialBits';
 import { averageScore } from '../filters';
@@ -117,7 +118,14 @@ export function MovieModal({ startWithTrailer, movie, rating, movies, ratings, e
               <h2>{movie.title}</h2>
               {movie.originalTitle && <p className="muted small">{movie.originalTitle}</p>}
               <p className="muted">
-                {[movie.year, movie.certification, movie.runtime && `${movie.runtime} min`, movie.genres.join(', ')]
+                {[
+                  movie.tv ? showYears(movie) : movie.year,
+                  movie.tv?.network,
+                  movie.tv && `${movie.tv.seasons.length} season${movie.tv.seasons.length === 1 ? '' : 's'}`,
+                  movie.certification,
+                  movie.runtime && `${movie.runtime} min${movie.tv ? ' episodes' : ''}`,
+                  movie.genres.join(', '),
+                ]
                   .filter(Boolean)
                   .join(' · ')}
               </p>
@@ -132,14 +140,14 @@ export function MovieModal({ startWithTrailer, movie, rating, movies, ratings, e
                     IMDb {movie.imdbRating !== undefined ? `★ ${movie.imdbRating.toFixed(1)}` : ''}
                   </a>
                 )}
-                {movie.ids.imdb && <StremioButton imdb={movie.ids.imdb} />}
+                {movie.ids.imdb && <StremioButton imdb={movie.ids.imdb} type={movie.tv ? 'series' : 'movie'} />}
                 {movie.ids.tmdb && (
                   <a className="btn" href={`https://www.themoviedb.org/movie/${movie.ids.tmdb}`} target="_blank" rel="noreferrer">
                     TMDB {movie.tmdbRating ? `★ ${movie.tmdbRating}` : ''}
                   </a>
                 )}
                 <MyListButton movie={movie} />
-                <ChallengeButton rating={rating} onOpen={() => setChallenging(true)} />
+                {!movie.tv && <ChallengeButton rating={rating} onOpen={() => setChallenging(true)} />}
                 {ADMIN && !entry && (
                   <button type="button" className="btn primary" onClick={() => setEditing((x) => !x)}>
                     {editing ? 'Done editing' : 'Edit rating'}
@@ -156,7 +164,7 @@ export function MovieModal({ startWithTrailer, movie, rating, movies, ratings, e
             {editing ? (
               <>
                 <CopyFrom movie={movie} movies={movies} ratings={ratings} onCopy={(from) => onRate((prev) => copyRating(prev, from))} />
-                <RatingEditor value={rating} onChange={onRate} />
+                <RatingEditor value={rating} onChange={onRate} movie={movie} />
               </>
             ) : (
               <>
@@ -165,7 +173,7 @@ export function MovieModal({ startWithTrailer, movie, rating, movies, ratings, e
               </>
             )}
             <WatchInfo movie={movie} rating={rating} />
-            {ADMIN && <LoggedWatches movie={movie} watch={watch} onAdd={onLogWatch} onRemove={onRemoveWatch} />}
+            {ADMIN && !movie.tv && <LoggedWatches movie={movie} watch={watch} onAdd={onLogWatch} onRemove={onRemoveWatch} />}
           </section>
           )}
 
@@ -173,7 +181,7 @@ export function MovieModal({ startWithTrailer, movie, rating, movies, ratings, e
           <p>{movie.overview}</p>
 
           <div className="credits">
-            {people('d', 'Director', movie.directors)}
+            {people('d', movie.tv ? 'Created by' : 'Director', movie.directors)}
             {people('w', 'Writing', movie.writers.slice(0, 4))}
             {people('c', 'Music', movie.composers.slice(0, 3))}
             {people('p', 'Cinematography', movie.cinematographers.slice(0, 2))}
@@ -184,6 +192,8 @@ export function MovieModal({ startWithTrailer, movie, rating, movies, ratings, e
               </div>
             )}
           </div>
+
+          {movie.tv && <SeasonsPanel show={movie} rating={rating} />}
 
           <Discussion movie={movie} rating={rating} />
 
@@ -258,4 +268,10 @@ export function PosterBadges({ imdb, avg }: { imdb?: number; avg: number | null 
       )}
     </>
   );
+}
+
+/** "2008–2013", or "2019–" while still running. */
+function showYears(show: Movie) {
+  const end = show.tv?.status === 'Ended' || show.tv?.status === 'Canceled' ? show.tv.lastAirDate?.slice(0, 4) : '';
+  return end && end !== String(show.year) ? `${show.year}–${end}` : end ? String(show.year) : `${show.year}–`;
 }

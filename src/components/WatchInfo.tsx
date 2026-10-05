@@ -11,7 +11,24 @@ const month = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { month
  */
 export const watchedBefore = (p: Play) => (p.at < TRACKING_START ? SITE.trackingStartLabel : month(p.at));
 
+function ShowWatchInfo({ movie }: { movie: Movie }) {
+  const tv = movie.tv!;
+  const real = movie.plays.filter((p) => !p.backfilled);
+  const earlier = movie.plays.filter((p) => p.backfilled);
+  const when = real.length
+    ? `${month(real[real.length - 1].at)}${real.length > 1 && month(real[0].at) !== month(real[real.length - 1].at) ? ` – ${month(real[0].at)}` : ''}${earlier.length ? `, and before ${watchedBefore(earlier[0])}` : ''}`
+    : earlier.length
+      ? `before ${watchedBefore(earlier[0])}`
+      : '';
+  return (
+    <p className="watch-info">
+      {tv.seen} of {tv.aired} episodes{when ? ` · watched ${when}` : ''}
+    </p>
+  );
+}
+
 export function WatchInfo({ movie, rating }: { movie: Movie; rating?: Rating }) {
+  if (movie.kind === 'tv') return <ShowWatchInfo movie={movie} />;
   const real = movie.plays.filter((p) => !p.backfilled);
   const earlier = movie.plays.filter((p) => p.backfilled);
   const times = movie.plays.length > 1 ? ` · ${movie.plays.length} times` : '';

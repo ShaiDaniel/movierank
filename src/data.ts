@@ -35,6 +35,8 @@ async function getJson<T>(name: string): Promise<T> {
 export interface SiteData {
   /** Trakt history only; see mergeWatched for the full Watched list. */
   movies: Movie[];
+  /** TV shows watched (data/shows.json). */
+  shows: Movie[];
   ratings: Ratings;
   watchlistMovies: Movie[];
   watchlist: Watchlist;
@@ -58,8 +60,9 @@ export async function loadAll(): Promise<SiteData> {
   };
   const load = <T,>(name: keyof typeof PUBLIC_NAME, fallback: T) =>
     mode === 'github' ? fromRepo<T>(name, fallback) : getJson<T>(PUBLIC_NAME[name]);
-  const [movies, ratings, watchlistMovies, watchlist, watches, loggedMovies] = await Promise.all([
+  const [movies, shows, ratings, watchlistMovies, watchlist, watches, loggedMovies] = await Promise.all([
     getJson<Movie[]>('movies'),
+    getJson<Movie[]>('shows').catch(() => [] as Movie[]),
     load<Ratings>('ratings', {}),
     load<Movie[]>('watchlistMovies', []),
     load<Watchlist>('watchlist', {}),
@@ -68,6 +71,7 @@ export async function loadAll(): Promise<SiteData> {
   ]);
   return {
     movies,
+    shows,
     ratings: withUnsaved('ratings', ratings),
     watchlist: withUnsaved('watchlist', watchlist),
     watches: withUnsaved('watches', watches),

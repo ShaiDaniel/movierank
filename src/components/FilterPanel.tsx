@@ -1,5 +1,7 @@
 import { useMemo, useState, type CSSProperties } from 'react';
-import { SCORES, VERDICTS, isMajorStreamer } from '../config';
+import { VERDICTS, isMajorStreamer, scoresFor } from '../config';
+import { PROGRESS_LABEL, progressOf } from '../progress';
+import type { Progress } from '../types';
 import { PERSON_ROLES, SORTS, verdictOf, WATCHLIST_SORTS, personNames, type Filters, type PersonRole, type SortKey, type VerdictFilter } from '../filters';
 import type { Movie, Ratings } from '../types';
 
@@ -10,11 +12,22 @@ interface Props {
   onChange: (patch: Partial<Filters>) => void;
   /** The watchlist has no verdicts, scores or watch dates to filter on. */
   mode: 'watched' | 'watchlist';
+  /** Filtering TV shows: TV scores, creators and progress. */
+  kind?: 'tv';
 }
 
 const toggle = <T,>(list: T[], item: T) => (list.includes(item) ? list.filter((x) => x !== item) : [...list, item]);
 
-export function FilterPanel({ movies, ratings, filters, onChange, mode }: Props) {
+export function FilterPanel({ movies, ratings, filters, onChange, mode, kind }: Props) {
+  const SCORES = scoresFor(kind);
+  const progressCounts = useMemo(() => {
+    const counts: Partial<Record<Progress, number>> = {};
+    for (const m of movies) {
+      const p = progressOf(m, ratings[m.key]);
+      if (p) counts[p.state] = (counts[p.state] ?? 0) + 1;
+    }
+    return counts;
+  }, [movies, ratings]);
   const watched = mode === 'watched';
   const genres = useMemo(() => countBy(movies.flatMap((m) => m.genres)), [movies]);
   const streamers = useMemo(
@@ -67,6 +80,24 @@ export function FilterPanel({ movies, ratings, filters, onChange, mode }: Props)
       </section>
       )}
 
+      {kind === 'tv' && (
+        <section>
+          <h4>Progress</h4>
+          <div className="chips">
+            {(Object.keys(PROGRESS_LABEL) as Progress[]).map((p) => (
+              <button
+                key={p}
+                type="button"
+                className={`chip ${filters.progress.includes(p) ? 'selected' : ''}`}
+                onClick={() => onChange({ progress: toggle(filters.progress, p) })}
+              >
+                {PROGRESS_LABEL[p]} <span className="count">{progressCounts[p] ?? 0}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section>
         <h4>Search people</h4>
         <PeopleSearch movies={movies} selected={filters.people} onAdd={(code) => onChange({ people: [...filters.people, code] })} />
@@ -84,7 +115,7 @@ export function FilterPanel({ movies, ratings, filters, onChange, mode }: Props)
       {topPeople.map(({ role, list }) =>
         list.length ? (
           <section key={role}>
-            <h4>{role === 'd' ? 'Common directors' : 'Common actors'}</h4>
+            <h4>{role === 'd' ? (kind === 'tv' ? 'Common creators' : 'Common directors') : 'Common actors'}</h4>
             <div className="chips">
               {list.map(([name, n]) => {
                 const code = `${role}:${name}`;

@@ -2,9 +2,9 @@
  * Opens the movie in Stremio. Stremio identifies movies by IMDb id, so the app's deep link
  * works directly; if the app doesn't take over (not installed), Stremio Web opens instead.
  */
-export function StremioButton({ imdb }: { imdb: string }) {
-  const app = `stremio:///detail/movie/${imdb}`;
-  const web = `https://web.stremio.com/#/detail/movie/${imdb}`;
+export function StremioButton({ imdb, type = 'movie' }: { imdb: string; type?: 'movie' | 'series' }) {
+  const app = `stremio:///detail/${type}/${imdb}`;
+  const web = `https://web.stremio.com/#/detail/${type}/${imdb}`;
 
   const open = () => {
     let left = false;

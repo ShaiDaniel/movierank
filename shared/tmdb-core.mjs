@@ -93,3 +93,67 @@ export function catalogEntry({ key, title, year, ids, plays = [] }, t) {
     title: t?.title ?? title,
   };
 }
+
+// --- TV shows ------------------------------------------------------------------
+
+export const TV_DETAILS_QUERY = '?append_to_response=aggregate_credits,videos,content_ratings,watch/providers,external_ids';
+
+function pickTvCertification(contentRatings) {
+  for (const country of [REGION, 'US']) {
+    const r = contentRatings?.results?.find((x) => x.iso_3166_1 === country)?.rating;
+    if (r) return r;
+  }
+  return null;
+}
+
+/** Trimmed TMDB show details, shaped like a movie's plus a "tv" block. */
+export function trimShow(d) {
+  const providers = d['watch/providers']?.results?.[REGION];
+  const prov = (list) => (list ?? []).map((p) => ({ name: p.provider_name, logo: p.logo_path }));
+  const regular = (d.seasons ?? []).filter((s) => s.season_number > 0);
+  const last = d.last_episode_to_air;
+  // Episodes aired so far: whole seasons before the latest aired episode, plus that season's part.
+  const aired = last
+    ? regular.filter((s) => s.season_number < last.season_number).reduce((n, s) => n + s.episode_count, 0) + last.episode_number
+    : 0;
+  return {
+    title: d.name,
+    originalTitle: d.original_name !== d.name ? d.original_name : null,
+    releaseDate: d.first_air_date || null,
+    runtime: d.episode_run_time?.[0] || last?.runtime || null,
+    genres: d.genres.map((g) => g.name),
+    overview: d.overview,
+    tagline: d.tagline || null,
+    poster: d.poster_path,
+    backdrop: d.backdrop_path,
+    language: d.original_language,
+    collection: null,
+    tmdbRating: d.vote_average ? Math.round(d.vote_average * 10) / 10 : null,
+    tmdbVotes: d.vote_count,
+    popularity: d.popularity,
+    certification: pickTvCertification(d.content_ratings),
+    // Creators fill the directors slot, so filtering by person works the same.
+    directors: (d.created_by ?? []).map((c) => c.name),
+    writers: [],
+    composers: [],
+    cinematographers: [],
+    cast: (d.aggregate_credits?.cast ?? []).slice(0, 15).map((c) => ({
+      name: c.name,
+      character: c.roles?.[0]?.character ?? '',
+      photo: c.profile_path,
+    })),
+    trailer: pickTrailer(d.videos),
+    providers: providers
+      ? { link: providers.link, stream: prov(providers.flatrate), rent: prov(providers.rent), buy: prov(providers.buy) }
+      : null,
+    imdb: d.external_ids?.imdb_id || null,
+    tv: {
+      status: d.status, // 'Ended' | 'Returning Series' | 'Canceled' | ...
+      network: d.networks?.[0]?.name ?? null,
+      seasons: regular.map((s) => ({ n: s.season_number, episodes: s.episode_count, airDate: s.air_date || null })),
+      aired,
+      lastAirDate: d.last_air_date || null,
+      nextAirDate: d.next_episode_to_air?.air_date || null,
+    },
+  };
+}

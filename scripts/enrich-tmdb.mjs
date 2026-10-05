@@ -9,7 +9,7 @@
 
 import { dataFile, readJsonFile, writeJsonAtomic } from './store.mjs';
 import { refreshImdbRatings, withImdbRating } from './imdb.mjs';
-import { catalogEntry, loadDetails } from './tmdb.mjs';
+import { catalogEntry, findShowByTvdb, loadDetails, loadShowDetails } from './tmdb.mjs';
 
 const CONCURRENCY = 8;
 const refresh = process.argv.includes('--refresh');
@@ -66,3 +66,44 @@ const loggedOnly = Object.keys(watches)
 const loggedMovies = await enrich(loggedOnly, 'logged');
 writeJsonAtomic(dataFile('logged-movies.json'), loggedMovies, { sortKeys: false, indent: 0 });
 console.log(`Wrote ${loggedMovies.length} movies to data/logged-movies.json`);
+
+// --- TV shows (data/trakt-shows.json → data/shows.json) ---------------------------
+const localDay = (iso) => new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+const traktShows = readJsonFile(dataFile('trakt-shows.json'), []);
+const shows = [];
+const showFailures = [];
+for (const s of traktShows) {
+  try {
+    const tmdbId = s.ids.tmdb ?? (await findShowByTvdb(token, s.ids.tvdb));
+    if (!tmdbId) throw new Error('not found on TMDB');
+    const t = await loadShowDetails(token, tmdbId, refresh);
+
+    // Unique regular episodes seen, per season (specials are season 0).
+    const seenKeys = new Set(s.episodes.filter((e) => e.s > 0).map((e) => `${e.s}x${e.e}`));
+    const perSeason = {};
+    for (const k of seenKeys) {
+      const season = Number(k.split('x')[0]);
+      perSeason[season] = (perSeason[season] ?? 0) + 1;
+    }
+    // One "play" per day watched: the day's latest episode, real only if any of them is.
+    const days = new Map();
+    for (const e of s.episodes) {
+      const day = localDay(e.at);
+      const d = days.get(day) ?? { at: e.at, backfilled: true, episodes: 0 };
+      if (e.at > d.at) d.at = e.at;
+      d.backfilled = d.backfilled && e.backfilled;
+      d.episodes++;
+      days.set(day, d);
+    }
+    const plays = [...days.values()].sort((a, b) => b.at.localeCompare(a.at));
+
+    const key = `tv-${tmdbId}`;
+    const entry = withImdbRating(catalogEntry({ key, title: s.title, year: s.year, ids: { ...s.ids, tmdb: tmdbId } }, t));
+    shows.push({ ...entry, kind: 'tv', plays, tv: { ...t.tv, seen: seenKeys.size, perSeason } });
+  } catch (e) {
+    showFailures.push(`${s.title}: ${e.message}`);
+  }
+}
+writeJsonAtomic(dataFile('shows.json'), shows, { sortKeys: false, indent: 0 });
+console.log(`Wrote ${shows.length} shows to data/shows.json`);
+if (showFailures.length) console.log(`Shows failed (${showFailures.length}):\n  ${showFailures.join('\n  ')}`);

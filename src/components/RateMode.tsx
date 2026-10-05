@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { SCORES, VERDICTS, tmdbImage } from '../config';
+import { VERDICTS, scoresFor, tmdbImage } from '../config';
 import { lastWatched } from '../filters';
 import type { Movie, Rating, Ratings } from '../types';
 import { CopyFrom, copyRating, seriesSources } from './CopyFrom';
@@ -14,8 +14,6 @@ interface Props {
   onRate: (key: string, update: Rating | ((prev: Rating) => Rating)) => void;
   onClose: () => void;
 }
-
-const ROWS = SCORES.length + 1;
 
 /** Fast queue for working through unrated movies, mostly from the keyboard. */
 export function RateMode({ movies, ratings, onRate, onClose }: Props) {
@@ -38,6 +36,8 @@ export function RateMode({ movies, ratings, onRate, onClose }: Props) {
 
   const movie = queue[index];
   const rating = movie ? ratings[movie.key] : undefined;
+  const SCORES = scoresFor(movie?.kind);
+  const ROWS = SCORES.length + 1;
   const ratedCount = movies.filter((m) => ratings[m.key]?.verdict).length;
 
   const go = (delta: number) => {
@@ -138,7 +138,7 @@ export function RateMode({ movies, ratings, onRate, onClose }: Props) {
           </div>
           <div>
             <CopyFrom movie={movie} movies={movies} ratings={ratings} onCopy={(from) => onRate(movie.key, (r) => copyRating(r, from))} />
-            <RatingEditor value={rating} onChange={(r) => onRate(movie.key, r)} activeRow={row} onRowClick={setRow} />
+            <RatingEditor value={rating} onChange={(r) => onRate(movie.key, r)} activeRow={row} onRowClick={setRow} movie={movie} />
             <div className="rate-nav">
               <button type="button" className="btn" onClick={() => go(-1)} disabled={index === 0}>
                 ← Previous
