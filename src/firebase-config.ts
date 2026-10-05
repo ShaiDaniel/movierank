@@ -16,4 +16,4 @@ export const FIREBASE_CONFIG = {
 export const OWNER_EMAIL = 'shai.daniel@gmail.com';
 
 /** Read-only TMDB v3 API key, so visitors can search movies to suggest. Empty = search off. */
-export const TMDB_PUBLIC_KEY = '';
+export const TMDB_PUBLIC_KEY = 'ab24db2e1e5c3b06b6bce2c562ae1fe0';

@@ -5,6 +5,8 @@ import type { PersonRole } from '../filters';
 import type { LoggedWatch, Movie, Play, Provider, Rating, Ratings, WatchlistEntry } from '../types';
 import { LoggedWatches } from './LoggedWatches';
 import { RatingSummary } from './RatingSummary';
+import { ChallengePanel, MyListButton } from './SocialBits';
+import { averageScore } from '../filters';
 import { CopyFrom, copyRating } from './CopyFrom';
 import { RatingEditor } from './RatingEditor';
 import { WatchInfo } from './WatchInfo';
@@ -97,7 +99,12 @@ export function MovieModal({ movie, rating, movies, ratings, entry, onWatchlistC
 
         <div className="modal-content">
           <div className="modal-head">
-            {poster && <img className="modal-poster" src={poster} alt="" />}
+            {poster && (
+              <div className="poster-wrap">
+                <img className="modal-poster" src={poster} alt="" />
+                <PosterBadges imdb={movie.imdbRating} avg={averageScore(rating)} />
+              </div>
+            )}
             <div className="modal-titles">
               <h2>{movie.title}</h2>
               {movie.originalTitle && <p className="muted small">{movie.originalTitle}</p>}
@@ -122,6 +129,7 @@ export function MovieModal({ movie, rating, movies, ratings, entry, onWatchlistC
                     TMDB {movie.tmdbRating ? `★ ${movie.tmdbRating}` : ''}
                   </a>
                 )}
+                <MyListButton movie={movie} />
                 {ADMIN && !entry && (
                   <button type="button" className="btn primary" onClick={() => setEditing((x) => !x)}>
                     {editing ? 'Done editing' : 'Edit rating'}
@@ -141,7 +149,10 @@ export function MovieModal({ movie, rating, movies, ratings, entry, onWatchlistC
                 <RatingEditor value={rating} onChange={onRate} />
               </>
             ) : (
-              <RatingSummary rating={rating} />
+              <>
+                <RatingSummary rating={rating} />
+                <ChallengePanel movie={movie} rating={rating} />
+              </>
             )}
             <WatchInfo movie={movie} rating={rating} />
             {ADMIN && <LoggedWatches movie={movie} watch={watch} onAdd={onLogWatch} onRemove={onRemoveWatch} />}
@@ -216,5 +227,23 @@ function ProviderRow({ label, list }: { label: string; list: Provider[] }) {
         <img key={p.name} src={tmdbImage(p.logo, 'w92')!} alt={p.name} title={p.name} className="provider-logo" />
       ))}
     </div>
+  );
+}
+
+/** IMDb and my average on a large poster (movie page, Recent). */
+export function PosterBadges({ imdb, avg }: { imdb?: number; avg: number | null }) {
+  return (
+    <>
+      {imdb !== undefined && (
+        <span className="card-imdb">
+          IMDb <b>{imdb.toFixed(1)}</b>
+        </span>
+      )}
+      {avg !== null && (
+        <span className="card-avg poster-avg" title="Average of my scores">
+          Avg {avg.toFixed(1)}
+        </span>
+      )}
+    </>
   );
 }

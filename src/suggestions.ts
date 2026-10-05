@@ -1,16 +1,22 @@
-// Co-worker suggestions: Google sign-in (Firebase Auth) and a public Firestore collection.
+// Co-worker features: Google sign-in (Firebase Auth) plus Firestore for suggestions,
+// rank challenges, comments on both, and each co-worker's private "My list".
 // Firebase is loaded only when configured, and lazily, so the main site stays light.
 import type { User } from 'firebase/auth';
 import { FIREBASE_CONFIG, OWNER_EMAIL, TMDB_PUBLIC_KEY } from './firebase-config';
-import type { SearchResult } from './types';
+import type { SearchResult, VerdictId } from './types';
 
 export const suggestionsEnabled = Boolean(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId);
 export const publicSearchEnabled = Boolean(TMDB_PUBLIC_KEY);
 
 export type SuggestionStatus = 'pending' | 'accepted' | 'dismissed';
+/** 'watch': you haven't seen it, watch it. 'rewatch': a challenge to a verdict, watch it again. */
+export type SuggestionKind = 'watch' | 'rewatch';
 
 export interface Suggestion {
   id: string;
+  kind: SuggestionKind;
+  /** For challenges: the verdict the co-worker thinks it deserves. */
+  proposedVerdict?: VerdictId;
   tmdb: number;
   title: string;
   year: number | null;
@@ -50,6 +56,19 @@ const toViewer = (u: User): Viewer => ({
   isOwner: Boolean(u.email && u.emailVerified && u.email.toLowerCase() === OWNER_EMAIL.toLowerCase()),
 });
 
+const authorOf = (u: User) => ({
+  userId: u.uid,
+  userName: (u.displayName ?? u.email ?? 'Someone').slice(0, 100),
+  userPhoto: u.photoURL,
+});
+
+async function signedInUser() {
+  const s = await services();
+  const u = s.authInstance.currentUser;
+  if (!u) throw new Error('Sign in first.');
+  return { ...s, u };
+}
+
 /** Calls back with the signed-in viewer (or null) now and on every change. */
 export async function watchViewer(callback: (v: Viewer | null) => void) {
   if (!suggestionsEnabled) return () => {};
@@ -67,6 +86,8 @@ export async function signOut() {
   await auth.signOut(authInstance);
 }
 
+// --- Suggestions and challenges ------------------------------------------------------
+
 export async function loadSuggestions(): Promise<Suggestion[]> {
   if (!suggestionsEnabled) return [];
   const { store, db } = await services();
@@ -75,6 +96,8 @@ export async function loadSuggestions(): Promise<Suggestion[]> {
     const x = d.data();
     return {
       id: d.id,
+      kind: x.kind ?? 'watch',
+      proposedVerdict: x.proposedVerdict,
       tmdb: x.tmdb,
       title: x.title,
       year: x.year ?? null,
@@ -90,19 +113,22 @@ export async function loadSuggestions(): Promise<Suggestion[]> {
   });
 }
 
-export async function addSuggestion(movie: SearchResult, note: string) {
-  const { store, authInstance, db } = await services();
-  const u = authInstance.currentUser;
-  if (!u) throw new Error('Sign in first.');
+export async function addSuggestion(
+  movie: Pick<SearchResult, 'tmdb' | 'title' | 'year' | 'poster'>,
+  note: string,
+  kind: SuggestionKind = 'watch',
+  proposedVerdict?: VerdictId,
+) {
+  const { store, db, u } = await signedInUser();
   await store.addDoc(store.collection(db, 'suggestions'), {
+    kind,
+    ...(proposedVerdict ? { proposedVerdict } : {}),
     tmdb: movie.tmdb,
     title: movie.title,
     year: movie.year,
     poster: movie.poster,
     note: note.trim().slice(0, 500),
-    userId: u.uid,
-    userName: (u.displayName ?? u.email ?? 'Someone').slice(0, 100),
-    userPhoto: u.photoURL,
+    ...authorOf(u),
     createdAt: store.serverTimestamp(),
     status: 'pending',
   });
@@ -118,6 +144,96 @@ export async function deleteSuggestion(id: string) {
   await store.deleteDoc(store.doc(db, 'suggestions', id));
 }
 
+// --- Comments (on suggestions and challenges) --------------------------------------
+
+export interface Comment {
+  id: string;
+  suggestionId: string;
+  text: string;
+  userId: string;
+  userName: string;
+  userPhoto: string | null;
+  createdAt: Date | null;
+}
+
+/** All comments, grouped by suggestion id, oldest first. */
+export async function loadComments(): Promise<Record<string, Comment[]>> {
+  if (!suggestionsEnabled) return {};
+  const { store, db } = await services();
+  // Sorted here rather than in the query, which would need a collection-group index.
+  const snap = await store.getDocs(store.collectionGroup(db, 'comments'));
+  const byParent: Record<string, Comment[]> = {};
+  for (const d of snap.docs) {
+    const x = d.data();
+    const suggestionId = d.ref.parent.parent!.id;
+    (byParent[suggestionId] ??= []).push({
+      id: d.id,
+      suggestionId,
+      text: x.text,
+      userId: x.userId,
+      userName: x.userName,
+      userPhoto: x.userPhoto ?? null,
+      createdAt: x.createdAt?.toDate?.() ?? null,
+    });
+  }
+  for (const list of Object.values(byParent)) list.sort((a, b) => (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0));
+  return byParent;
+}
+
+export async function addComment(suggestionId: string, text: string) {
+  const { store, db, u } = await signedInUser();
+  await store.addDoc(store.collection(db, 'suggestions', suggestionId, 'comments'), {
+    text: text.trim().slice(0, 1000),
+    ...authorOf(u),
+    createdAt: store.serverTimestamp(),
+  });
+}
+
+export async function deleteComment(suggestionId: string, commentId: string) {
+  const { store, db } = await services();
+  await store.deleteDoc(store.doc(db, 'suggestions', suggestionId, 'comments', commentId));
+}
+
+// --- My list (each co-worker's private list of movies from this site) --------------
+
+export interface ListItem {
+  key: string;
+  title: string;
+  addedAt: Date | null;
+  /** Ticked off by the co-worker once they've watched it. */
+  seen: boolean;
+}
+
+export async function loadMyList(uid: string): Promise<ListItem[]> {
+  const { store, db } = await services();
+  const snap = await store.getDocs(store.collection(db, 'lists', uid, 'items'));
+  return snap.docs.map((d) => {
+    const x = d.data();
+    return { key: d.id, title: x.title, addedAt: x.addedAt?.toDate?.() ?? null, seen: Boolean(x.seen) };
+  });
+}
+
+export async function addToMyList(uid: string, key: string, title: string) {
+  const { store, db } = await services();
+  await store.setDoc(store.doc(db, 'lists', uid, 'items', key), {
+    title: title.slice(0, 300),
+    addedAt: store.serverTimestamp(),
+    seen: false,
+  });
+}
+
+export async function setSeenOnMyList(uid: string, key: string, seen: boolean) {
+  const { store, db } = await services();
+  await store.updateDoc(store.doc(db, 'lists', uid, 'items', key), { seen });
+}
+
+export async function removeFromMyList(uid: string, key: string) {
+  const { store, db } = await services();
+  await store.deleteDoc(store.doc(db, 'lists', uid, 'items', key));
+}
+
+// --- Search ------------------------------------------------------------------------
+
 /** Movie search for visitors, with the public read-only TMDB key. */
 export async function searchTmdbPublic(query: string): Promise<SearchResult[]> {
   const res = await fetch(
@@ -125,11 +241,13 @@ export async function searchTmdbPublic(query: string): Promise<SearchResult[]> {
   );
   if (!res.ok) throw new Error(`Search failed (${res.status})`);
   const d = await res.json();
-  return d.results.slice(0, 10).map((m: { id: number; title: string; release_date?: string; poster_path: string | null; overview: string }) => ({
-    tmdb: m.id,
-    title: m.title,
-    year: m.release_date ? Number(m.release_date.slice(0, 4)) : null,
-    poster: m.poster_path,
-    overview: m.overview,
-  }));
+  return d.results
+    .slice(0, 10)
+    .map((m: { id: number; title: string; release_date?: string; poster_path: string | null; overview: string }) => ({
+      tmdb: m.id,
+      title: m.title,
+      year: m.release_date ? Number(m.release_date.slice(0, 4)) : null,
+      poster: m.poster_path,
+      overview: m.overview,
+    }));
 }

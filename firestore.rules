@@ -1,7 +1,8 @@
 rules_version = '2';
 
-// Security rules for MovieRank co-worker suggestions.
-// Paste into Firebase console → Firestore Database → Rules, then Publish.
+// Security rules for MovieRank co-worker features: suggestions, rank challenges,
+// comments, and each co-worker's private list.
+// Published in Firebase console → Firestore Database → Rules.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -16,20 +17,26 @@ service cloud.firestore {
         && request.auth.token.email_verified == true;
     }
 
+    function asSelf(data) {
+      return data.userId == request.auth.uid
+        && data.userName is string && data.userName.size() <= 100
+        && data.createdAt == request.time;
+    }
+
+    // Suggestions ('watch') and rank challenges ('rewatch'), public.
     match /suggestions/{id} {
-      // Suggestions are public.
       allow read: if true;
 
-      // Any signed-in Google user can suggest, as themselves, starting as pending.
       allow create: if signedIn()
-        && request.resource.data.keys().hasOnly(['tmdb', 'title', 'year', 'poster', 'note', 'userId', 'userName', 'userPhoto', 'createdAt', 'status'])
-        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasOnly(['kind', 'proposedVerdict', 'tmdb', 'title', 'year', 'poster', 'note', 'userId', 'userName', 'userPhoto', 'createdAt', 'status'])
+        && asSelf(request.resource.data)
+        && request.resource.data.kind in ['watch', 'rewatch']
+        && (!('proposedVerdict' in request.resource.data)
+            || request.resource.data.proposedVerdict in ['must', 'should', 'may', 'neutral', 'maynot', 'shouldnot', 'mustnot'])
         && request.resource.data.status == 'pending'
         && request.resource.data.tmdb is int
         && request.resource.data.title is string && request.resource.data.title.size() <= 300
-        && request.resource.data.note is string && request.resource.data.note.size() <= 500
-        && request.resource.data.userName is string && request.resource.data.userName.size() <= 100
-        && request.resource.data.createdAt == request.time;
+        && request.resource.data.note is string && request.resource.data.note.size() <= 500;
 
       // Only the owner decides; only the status and decision time may change.
       allow update: if isOwner()
@@ -39,6 +46,30 @@ service cloud.firestore {
       // Suggesters can withdraw their own pending suggestion; the owner can delete any.
       allow delete: if isOwner()
         || (signedIn() && resource.data.userId == request.auth.uid && resource.data.status == 'pending');
+
+      // Anyone signed in can comment, as themselves; authors and the owner can delete.
+      match /comments/{commentId} {
+        allow create: if signedIn()
+          && request.resource.data.keys().hasOnly(['text', 'userId', 'userName', 'userPhoto', 'createdAt'])
+          && asSelf(request.resource.data)
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1000;
+        allow delete: if isOwner() || (signedIn() && resource.data.userId == request.auth.uid);
+      }
+    }
+
+    // Comments are public (read across all suggestions in one query).
+    match /{path=**}/comments/{commentId} {
+      allow read: if true;
+    }
+
+    // Each co-worker's own list: private to them.
+    match /lists/{uid}/items/{movieKey} {
+      allow read, delete: if signedIn() && request.auth.uid == uid;
+      allow create, update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['title', 'addedAt', 'seen'])
+        && request.resource.data.title is string && request.resource.data.title.size() <= 300
+        && request.resource.data.seen is bool;
     }
   }
 }

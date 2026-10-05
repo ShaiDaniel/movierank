@@ -7,7 +7,11 @@ import { RateMode } from './components/RateMode';
 import { RecentPage } from './components/RecentPage';
 import { StatsPage } from './components/StatsPage';
 import { SuggestionsPage } from './components/SuggestionsPage';
-import { loadSuggestions, suggestionsEnabled, watchViewer, type Suggestion, type Viewer } from './suggestions';
+import { AboutPage } from './components/AboutPage';
+import { MyListPage } from './components/MyListPage';
+import { AccountButton } from './components/SocialBits';
+import { useSocial } from './social';
+import type { Suggestion } from './suggestions';
 import { SITE } from './config';
 import { UnlockDialog } from './components/UnlockDialog';
 import {
@@ -31,8 +35,8 @@ import type { Movie, Play, Rating, Ratings, Watches, Watchlist, WatchlistEntry }
 import { mergeWatched } from './watches';
 
 const PAGE = 120;
-type Tab = 'watched' | 'recent' | 'watchlist' | 'suggestions' | 'stats';
-const TABS: Tab[] = ['watched', 'recent', 'watchlist', 'suggestions', 'stats'];
+type Tab = 'watched' | 'recent' | 'watchlist' | 'suggestions' | 'mylist' | 'stats' | 'about';
+const TABS: Tab[] = ['watched', 'recent', 'watchlist', 'suggestions', 'mylist', 'stats', 'about'];
 
 export function App() {
   const [traktMovies, setTraktMovies] = useState<Movie[] | null>(null);
@@ -57,23 +61,9 @@ export function App() {
   const [mode, setMode] = useState<EditMode>(() => (autoUnlock(), editMode()));
   const [unlocking, setUnlocking] = useState(false);
   const ADMIN = mode !== null;
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-  const [viewer, setViewer] = useState<Viewer | null>(null);
+  const social = useSocial();
+  const pendingSuggestions = social.suggestions.filter((x) => x.status === 'pending').length;
 
-  const reloadSuggestions = useCallback(async () => {
-    try {
-      setSuggestions(await loadSuggestions());
-    } catch (e) {
-      console.error('Loading suggestions failed', e);
-    }
-  }, []);
-  useEffect(() => {
-    if (!suggestionsEnabled) return;
-    reloadSuggestions();
-    let unsubscribe: (() => void) | undefined;
-    watchViewer(setViewer).then((u) => (unsubscribe = u));
-    return () => unsubscribe?.();
-  }, [reloadSuggestions]);
 
   useEffect(() => onSaveStatus(setSaveStatus), []);
 
@@ -107,10 +97,18 @@ export function App() {
   );
   const watchedKeys = useMemo(() => new Set(movies?.map((m) => m.key)), [movies]);
   // Watched movies drop off the watchlist once they show up in the Trakt history.
-  const listed = useMemo(
-    () => watchlistMovies.filter((m) => watchlist[m.key] && !watchlist[m.key].removed && !watchedKeys.has(m.key)),
-    [watchlistMovies, watchlist, watchedKeys],
-  );
+  // The watchlist: unwatched movies, plus rewatches not yet watched again since they were added.
+  const listed = useMemo(() => {
+    const active = (key: string) => watchlist[key] && !watchlist[key].removed;
+    const fresh = watchlistMovies.filter((m) => active(m.key) && !watchedKeys.has(m.key));
+    const rewatches = (movies ?? []).filter((m) => {
+      const e = watchlist[m.key];
+      if (!active(m.key) || !e.rewatch) return false;
+      const lastReal = m.plays.find((p) => !p.backfilled)?.at ?? '';
+      return lastReal < e.addedAt;
+    });
+    return [...fresh, ...rewatches];
+  }, [watchlistMovies, watchlist, watchedKeys, movies]);
 
   // Recent and Stats open movies from the Watched list.
   const current = tab === 'watchlist' ? listed : (movies ?? []);
@@ -196,10 +194,23 @@ export function App() {
     });
   }, []);
 
-  /** Accepting a co-worker's suggestion puts it on the watchlist, crediting them. */
+  /** Accepting a suggestion puts it on the watchlist, crediting them; a challenge puts it back on as a rewatch. */
   const acceptSuggestion = async (s: Suggestion) => {
     const key = String(s.tmdb);
-    if (watchedKeys.has(key)) return;
+    const credit = `${s.kind === 'rewatch' ? 'Challenged by' : 'Suggested by'} ${s.userName}${s.note ? `: ${s.note}` : ''}`;
+    if (s.kind === 'rewatch' || watchedKeys.has(key)) {
+      if (!watchedKeys.has(key)) return;
+      updateWatchlist(key, () => ({
+        addedAt: new Date().toISOString(),
+        source: 'site',
+        title: s.title,
+        year: s.year,
+        rewatch: true,
+        why: credit,
+        updatedAt: new Date().toISOString(),
+      }));
+      return;
+    }
     const movie = watchlistMovies.find((m) => m.key === key) ?? (await fetchMovieDetails(s.tmdb, 'watchlist'));
     setWatchlistMovies((all) => (all.some((m) => m.key === key) ? all : [...all, movie]));
     updateWatchlist(key, (prev) => ({
@@ -208,7 +219,7 @@ export function App() {
       removed: undefined,
       title: movie.title,
       year: movie.year,
-      why: prev.why ?? `Suggested by ${s.userName}${s.note ? `: ${s.note}` : ''}`,
+      why: prev.why ?? credit,
       updatedAt: new Date().toISOString(),
     }));
   };
@@ -229,7 +240,8 @@ export function App() {
     setOpenKey(movie.key); // straight to the movie page to set priority and why
   };
 
-  const open = current.find((m) => m.key === openKey);
+  // My list can hold watched and watchlist movies, so fall back to both catalogs.
+  const open = current.find((m) => m.key === openKey) ?? (tab === 'mylist' ? watchlistMovies.find((m) => m.key === openKey) : undefined);
   const step = useCallback(
     (delta: number) => {
       const i = results.findIndex((m) => m.key === openKey);
@@ -285,6 +297,7 @@ export function App() {
             Rate mode <span className="count">{movies.length - ratedCount} left</span>
           </button>
         )}
+        <AccountButton />
         {ADMIN && (
           <span className={`save-status ${saveStatus.state}`}>
             {saveStatus.state === 'saved' ? '✓ Saved' : saveStatus.state === 'saving' ? 'Saving…' : '⚠ Not saved'}
@@ -334,16 +347,21 @@ export function App() {
         <button type="button" className={`tab ${tab === 'watchlist' ? 'active' : ''}`} onClick={() => switchTab('watchlist')}>
           Watchlist <span className="count">{listed.length}</span>
         </button>
-        {suggestionsEnabled && (
+        {social.enabled && (
           <button type="button" className={`tab ${tab === 'suggestions' ? 'active' : ''}`} onClick={() => switchTab('suggestions')}>
-            Suggestions{' '}
-            {suggestions.some((x) => x.status === 'pending') && (
-              <span className="count">{suggestions.filter((x) => x.status === 'pending').length}</span>
-            )}
+            Suggestions {pendingSuggestions > 0 && <span className="count">{pendingSuggestions}</span>}
+          </button>
+        )}
+        {social.viewer && !social.viewer.isOwner && (
+          <button type="button" className={`tab ${tab === 'mylist' ? 'active' : ''}`} onClick={() => switchTab('mylist')}>
+            My list <span className="count">{social.myList.length}</span>
           </button>
         )}
         <button type="button" className={`tab ${tab === 'stats' ? 'active' : ''}`} onClick={() => switchTab('stats')}>
           Stats
+        </button>
+        <button type="button" className={`tab ${tab === 'about' ? 'active' : ''}`} onClick={() => switchTab('about')}>
+          About
         </button>
       </nav>
 
@@ -362,11 +380,9 @@ export function App() {
       )}
       {tab === 'suggestions' && (
         <SuggestionsPage
-          suggestions={suggestions}
-          viewer={viewer}
           watched={watchedKeys}
           listed={new Set(listed.map((m) => m.key))}
-          reload={reloadSuggestions}
+          ratings={ratings}
           onAccept={acceptSuggestion}
           onOpen={(key, target) => {
             switchTab(target);
@@ -374,6 +390,10 @@ export function App() {
           }}
         />
       )}
+      {tab === 'mylist' && (
+        <MyListPage catalog={[...movies, ...watchlistMovies]} ratings={ratings} onOpen={setOpenKey} />
+      )}
+      {tab === 'about' && <AboutPage />}
       {tab === 'stats' && (
         <StatsPage
           movies={movies}
@@ -450,7 +470,7 @@ export function App() {
           rating={ratings[open.key]}
           movies={movies}
           ratings={ratings}
-          entry={tab === 'watchlist' ? watchlist[open.key] : undefined}
+          entry={tab === 'watchlist' || !watchedKeys.has(open.key) ? watchlist[open.key] : undefined}
           onWatchlistChange={(update) => updateWatchlist(open.key, update)}
           watch={watches[open.key]}
           onLogWatch={async (play) => {

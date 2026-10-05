@@ -77,6 +77,8 @@ export interface WatchlistEntry {
   priority?: Priority;
   /** Why it's on the list, or who recommended it. */
   why?: string;
+  /** Already watched; back on the list to watch again (e.g. an accepted challenge). */
+  rewatch?: boolean;
   /** Kept as a tombstone so a Trakt sync doesn't add it back. */
   removed?: boolean;
   updatedAt?: string;

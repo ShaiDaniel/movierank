@@ -6,6 +6,8 @@ import { CopyFrom, copyRating } from './CopyFrom';
 import { RatingEditor } from './RatingEditor';
 import { RatingSummary } from './RatingSummary';
 import { WatchInfo } from './WatchInfo';
+import { PosterBadges } from './MovieModal';
+import { averageScore } from '../filters';
 
 export const RECENT_COUNT = 5;
 
@@ -46,6 +48,7 @@ export function RecentPage({ movies, ratings, onRate, onOpen, onPerson }: Props)
                   {m.poster && (
                     <button type="button" className="recent-poster" onClick={() => onOpen(m.key)} aria-label={`Open ${m.title}`}>
                       <img src={tmdbImage(m.poster, 'w342')!} alt="" loading="lazy" />
+                      <PosterBadges avg={averageScore(rating)} />
                     </button>
                   )}
                   <div>
