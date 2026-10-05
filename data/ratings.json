@@ -95,6 +95,20 @@
   "updatedAt": "2026-10-01T15:20:11.725Z",
   "verdict": "maynot"
  },
+ "89": {
+  "verdict": "must",
+  "updatedAt": "2026-10-05T04:26:36.402Z",
+  "scores": {
+   "fun": 9,
+   "epic": 9,
+   "story": 8,
+   "acting": 7,
+   "visuals": 6,
+   "audio": 6,
+   "rewatch": 7,
+   "holdsUp": 7
+  }
+ },
  "98": {
   "scores": {
    "epic": 8,
@@ -1083,6 +1097,20 @@
    "visuals": 4,
    "audio": 4,
    "rewatch": 3
+  }
+ },
+ "150540": {
+  "verdict": "must",
+  "updatedAt": "2026-10-05T04:26:57.123Z",
+  "scores": {
+   "fun": 9,
+   "epic": 7,
+   "story": 9,
+   "acting": 6,
+   "visuals": 6,
+   "audio": 5,
+   "rewatch": 7,
+   "holdsUp": 7
   }
  },
  "152532": {
