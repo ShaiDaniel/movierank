@@ -966,13 +966,16 @@
  },
  "2062": {
   "verdict": "should",
-  "updatedAt": "2026-10-05T12:59:19.874Z",
+  "updatedAt": "2026-10-05T13:00:23.137Z",
   "scores": {
    "fun": 8,
    "epic": 8,
    "story": 7,
    "acting": 5,
-   "visuals": 6
+   "visuals": 6,
+   "audio": 4,
+   "rewatch": 6,
+   "holdsUp": 5
   }
  },
  "2277": {

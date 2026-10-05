@@ -531,3 +531,4 @@
 {"at":"2026-10-05T12:58:34.624Z","key":"1417","rating":{"verdict":"may","updatedAt":"2026-10-05T12:58:24.996Z","scores":{"fun":6,"epic":6,"story":8,"acting":7,"visuals":7,"audio":6}},"by":"site"}
 {"at":"2026-10-05T12:58:50.464Z","key":"1417","rating":{"verdict":"may","updatedAt":"2026-10-05T12:58:35.624Z","scores":{"fun":6,"epic":6,"story":8,"acting":7,"visuals":7,"audio":6,"rewatch":5,"holdsUp":5}},"by":"site"}
 {"at":"2026-10-05T12:59:28.975Z","key":"2062","rating":{"verdict":"should","updatedAt":"2026-10-05T12:59:19.874Z","scores":{"fun":8,"epic":8,"story":7,"acting":5,"visuals":6}},"by":"site"}
+{"at":"2026-10-05T13:00:32.529Z","key":"2062","rating":{"verdict":"should","updatedAt":"2026-10-05T13:00:23.137Z","scores":{"fun":8,"epic":8,"story":7,"acting":5,"visuals":6,"audio":4,"rewatch":6,"holdsUp":5}},"by":"site"}
