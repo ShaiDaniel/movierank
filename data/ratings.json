@@ -900,11 +900,14 @@
  },
  "1417": {
   "verdict": "may",
-  "updatedAt": "2026-10-05T12:58:07.057Z",
+  "updatedAt": "2026-10-05T12:58:24.996Z",
   "scores": {
    "fun": 6,
    "epic": 6,
-   "story": 8
+   "story": 8,
+   "acting": 7,
+   "visuals": 7,
+   "audio": 6
   }
  },
  "1422": {
