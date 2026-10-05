@@ -58,8 +58,9 @@ export function AboutPage() {
         <p className="muted small">
           <b>Holds up</b> matters most for older movies: some classics feel dated today, some feel timeless.{' '}
           <b>Iconic</b> is about status, not quality: how canonical the movie is, a reference point people quote and build on.
-          A small drama can be a Must watch with a low Iconic score. <b>Holds up</b> isn't part of the average, since how well a
-          movie aged says nothing about how good it is.
+          A small drama can be a Must watch with a low Iconic score. <b>Holds up</b> and <b>Rewatch</b> aren't part of the
+          average: how well a movie aged, or whether it rewards watching again (a twist like The Sixth Sense only works once,
+          while The Big Lebowski gets better every time), says nothing about how good it is.
         </p>
       </section>
 
@@ -85,7 +86,7 @@ export function AboutPage() {
               <span className="card-avg">Avg 7.4</span>
             </dt>
             <dd>
-              The average of {SITE.owner}'s scores for that movie (all except Holds up). It runs about 2 points below IMDb across the board — an
+              The average of {SITE.owner}'s scores for that movie (all except Holds up and Rewatch). It runs about 2 points below IMDb across the board — an
               average of eight categories is naturally lower than a single overall rating — so compare it with other movies
               here rather than with IMDb.
             </dd>

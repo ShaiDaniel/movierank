@@ -29,7 +29,7 @@ import {
   type SaveStatus,
 } from './data';
 import { EditContext } from './edit';
-import { DEFAULT_FILTERS, PRESETS, activeFilterCount, applyFilters, parseFilters, serializeFilters, type Filters } from './filters';
+import { DEFAULT_FILTERS, activeFilterCount, applyFilters, parseFilters, serializeFilters, type Filters } from './filters';
 import type { Movie, Play, Rating, Ratings, Watches, Watchlist, WatchlistEntry } from './types';
 import { mergeWatched } from './watches';
 
@@ -370,18 +370,6 @@ export function App() {
               Show {results.length} movies
             </button>
           </div>
-          {tab === 'watched' && (
-            <section className="quick-picks">
-              <h4>Quick picks</h4>
-              <div className="chips">
-                {PRESETS.filter((p) => p.label !== 'Everything').map((p) => (
-                  <button key={p.label} type="button" className="chip" onClick={() => setFilters({ ...DEFAULT_FILTERS, ...p.filters })}>
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
           <FilterPanel movies={current} ratings={ratings} filters={filters} onChange={patch} mode={tab === 'watchlist' ? 'watchlist' : 'watched'} />
         </aside>
 

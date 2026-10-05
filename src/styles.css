@@ -52,7 +52,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 .brand h1::before { content: '🎬 '; }
 .brand p { margin: 2px 0 0; font-size: 0.9rem; }
 .search { flex: 1; min-width: 200px; max-width: 480px; margin-left: auto; }
-.presets { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; }
 .layout { display: grid; grid-template-columns: 290px 1fr; gap: 24px; align-items: start; }
 .sidebar { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto; padding-right: 6px; scrollbar-width: thin; }
 .sidebar-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
@@ -457,5 +456,3 @@ kbd { padding: 1px 6px; border-radius: 4px; background: var(--panel-2); border: 
   .suggestion { grid-template-columns: 36px 48px 1fr; }
   .suggestion-actions { grid-column: 1 / -1; }
 }
-.quick-picks { padding-bottom: 12px; }
-.quick-picks h4 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 8px; }

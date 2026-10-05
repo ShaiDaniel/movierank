@@ -71,20 +71,6 @@ export const DEFAULT_FILTERS: Filters = {
   sort: 'rec',
 };
 
-export interface Preset {
-  label: string;
-  filters: Partial<Filters>;
-}
-
-export const PRESETS: Preset[] = [
-  { label: 'Everything', filters: {} },
-  { label: 'Must watch', filters: { verdicts: ['must'] } },
-  { label: 'Worth your time', filters: { verdicts: ['must', 'should', 'may'] } },
-  { label: 'Iconic', filters: { min: { epic: 8 }, sort: 'score:epic' } },
-  { label: 'Pure fun', filters: { min: { fun: 8 }, sort: 'score:fun' } },
-  { label: 'Classics that hold up', filters: { yearTo: 1999, min: { holdsUp: 8 } } },
-  { label: 'Avoid', filters: { verdicts: ['shouldnot', 'mustnot'] } },
-];
 
 const list = (v: string | null) => (v ? v.split('|').filter(Boolean) : []);
 const num = (v: string | null) => (v && !Number.isNaN(Number(v)) ? Number(v) : null);
@@ -157,8 +143,11 @@ const VERDICT_RANK: Record<VerdictFilter, number> = {
   must: 0, should: 1, may: 2, neutral: 3, unrated: 4, maynot: 5, shouldnot: 6, mustnot: 7,
 };
 
-/** Scores left out of the average: how well a movie aged says nothing about how good it is. */
-const NOT_AVERAGED: ScoreId[] = ['holdsUp'];
+/**
+ * Scores left out of the average, because they describe the experience rather than the movie:
+ * how well it aged, and whether it rewards rewatching (a great twist movie only works once).
+ */
+const NOT_AVERAGED: ScoreId[] = ['holdsUp', 'rewatch'];
 
 export function averageScore(r: Rating | undefined) {
   const values = Object.entries(r?.scores ?? {})
