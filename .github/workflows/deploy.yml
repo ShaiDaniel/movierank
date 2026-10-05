@@ -12,10 +12,11 @@ permissions:
   pages: write
   id-token: write
 
-# Only the newest push deploys; an older run in progress is cancelled.
+# A running deploy always finishes; newer pushes queue behind it (GitHub keeps only the
+# latest waiting run), so frequent saves from the site can't keep cancelling every deploy.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
