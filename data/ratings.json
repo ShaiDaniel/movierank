@@ -1122,6 +1122,20 @@
   },
   "updatedAt": "2026-10-05T04:30:19.248Z"
  },
+ "1893": {
+  "verdict": "should",
+  "scores": {
+   "fun": 7,
+   "epic": 10,
+   "story": 8,
+   "acting": 7,
+   "visuals": 6,
+   "audio": 8,
+   "rewatch": 6,
+   "holdsUp": 4
+  },
+  "updatedAt": "2026-10-05T20:08:45.350Z"
+ },
  "1927": {
   "verdict": "shouldnot",
   "updatedAt": "2026-10-01T15:47:08.619Z",
