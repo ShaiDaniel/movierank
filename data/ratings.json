@@ -1635,7 +1635,7 @@
  },
  "508943": {
   "verdict": "should",
-  "updatedAt": "2026-10-05T12:56:53.091Z",
+  "updatedAt": "2026-10-05T12:57:04.161Z",
   "scores": {
    "fun": 8,
    "epic": 5,
@@ -1643,7 +1643,8 @@
    "acting": 5,
    "visuals": 6,
    "audio": 5,
-   "rewatch": 6
+   "rewatch": 6,
+   "holdsUp": 6
   }
  },
  "515001": {
