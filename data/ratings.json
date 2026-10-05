@@ -1261,6 +1261,20 @@
   },
   "updatedAt": "2026-10-05T19:56:10.225Z"
  },
+ "10195": {
+  "verdict": "may",
+  "updatedAt": "2026-10-05T19:56:50.262Z",
+  "scores": {
+   "fun": 6,
+   "epic": 7,
+   "story": 6,
+   "acting": 6,
+   "visuals": 7,
+   "audio": 5,
+   "rewatch": 4,
+   "holdsUp": 5
+  }
+ },
  "11005": {
   "verdict": "should",
   "updatedAt": "2026-10-04T18:48:31.530Z",
