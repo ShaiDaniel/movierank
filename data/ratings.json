@@ -1774,6 +1774,20 @@
   "updatedAt": "2026-10-01T15:42:44.851Z",
   "verdict": "may"
  },
+ "49018": {
+  "scores": {
+   "fun": 8,
+   "epic": 5,
+   "story": 5,
+   "acting": 5,
+   "visuals": 7,
+   "audio": 6,
+   "rewatch": 4,
+   "holdsUp": 4
+  },
+  "updatedAt": "2026-10-05T20:42:53.730Z",
+  "verdict": "may"
+ },
  "49026": {
   "verdict": "must",
   "scores": {
@@ -1924,6 +1938,20 @@
   },
   "updatedAt": "2026-10-01T15:43:05.497Z",
   "verdict": "may"
+ },
+ "91586": {
+  "verdict": "may",
+  "scores": {
+   "fun": 8,
+   "epic": 5,
+   "story": 5,
+   "acting": 5,
+   "visuals": 7,
+   "audio": 6,
+   "rewatch": 4,
+   "holdsUp": 4
+  },
+  "updatedAt": "2026-10-05T20:43:01.154Z"
  },
  "99861": {
   "verdict": "may",
@@ -2342,6 +2370,20 @@
    "holdsUp": 5
   },
   "updatedAt": "2026-10-05T19:58:46.903Z"
+ },
+ "280092": {
+  "verdict": "may",
+  "scores": {
+   "fun": 7,
+   "epic": 5,
+   "story": 4,
+   "acting": 5,
+   "visuals": 7,
+   "audio": 6,
+   "rewatch": 4,
+   "holdsUp": 4
+  },
+  "updatedAt": "2026-10-05T20:43:12.037Z"
  },
  "281338": {
   "verdict": "should",
@@ -2798,6 +2840,20 @@
    "rewatch": 4,
    "holdsUp": 5
   }
+ },
+ "406563": {
+  "verdict": "may",
+  "scores": {
+   "fun": 6,
+   "epic": 5,
+   "story": 4,
+   "acting": 5,
+   "visuals": 5,
+   "audio": 5,
+   "rewatch": 4,
+   "holdsUp": 4
+  },
+  "updatedAt": "2026-10-05T20:43:21.054Z"
  },
  "424694": {
   "verdict": "should",
