@@ -1068,6 +1068,34 @@
    "holdsUp": 5
   }
  },
+ "955": {
+  "verdict": "must",
+  "scores": {
+   "epic": 7,
+   "fun": 6,
+   "story": 7,
+   "acting": 6,
+   "visuals": 5,
+   "audio": 6,
+   "rewatch": 5,
+   "holdsUp": 5
+  },
+  "updatedAt": "2026-10-05T20:38:36.664Z"
+ },
+ "956": {
+  "verdict": "must",
+  "scores": {
+   "epic": 8,
+   "fun": 7,
+   "story": 7,
+   "acting": 6,
+   "visuals": 5,
+   "audio": 6,
+   "rewatch": 5,
+   "holdsUp": 5
+  },
+  "updatedAt": "2026-10-05T20:38:27.619Z"
+ },
  "1018": {
   "scores": {
    "fun": 3,
