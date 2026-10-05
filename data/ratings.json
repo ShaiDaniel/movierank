@@ -996,6 +996,20 @@
   "updatedAt": "2026-10-01T15:37:36.979Z",
   "verdict": "may"
  },
+ "1865": {
+  "verdict": "should",
+  "scores": {
+   "fun": 9,
+   "epic": 8,
+   "story": 6,
+   "acting": 6,
+   "visuals": 7,
+   "audio": 7,
+   "rewatch": 6,
+   "holdsUp": 6
+  },
+  "updatedAt": "2026-10-05T18:51:34.705Z"
+ },
  "1891": {
   "scores": {
    "fun": 6,
