@@ -11,7 +11,6 @@ import { AboutPage } from './components/AboutPage';
 import { MyListPage } from './components/MyListPage';
 import { AccountButton } from './components/SocialBits';
 import { useSocial } from './social';
-import type { Suggestion } from './suggestions';
 import { SITE } from './config';
 import { UnlockDialog } from './components/UnlockDialog';
 import {
@@ -97,18 +96,11 @@ export function App() {
   );
   const watchedKeys = useMemo(() => new Set(movies?.map((m) => m.key)), [movies]);
   // Watched movies drop off the watchlist once they show up in the Trakt history.
-  // The watchlist: unwatched movies, plus rewatches not yet watched again since they were added.
-  const listed = useMemo(() => {
-    const active = (key: string) => watchlist[key] && !watchlist[key].removed;
-    const fresh = watchlistMovies.filter((m) => active(m.key) && !watchedKeys.has(m.key));
-    const rewatches = (movies ?? []).filter((m) => {
-      const e = watchlist[m.key];
-      if (!active(m.key) || !e.rewatch) return false;
-      const lastReal = m.plays.find((p) => !p.backfilled)?.at ?? '';
-      return lastReal < e.addedAt;
-    });
-    return [...fresh, ...rewatches];
-  }, [watchlistMovies, watchlist, watchedKeys, movies]);
+  // Watched movies drop off the watchlist once they show up in the history.
+  const listed = useMemo(
+    () => watchlistMovies.filter((m) => watchlist[m.key] && !watchlist[m.key].removed && !watchedKeys.has(m.key)),
+    [watchlistMovies, watchlist, watchedKeys],
+  );
 
   // Recent and Stats open movies from the Watched list.
   const current = tab === 'watchlist' ? listed : (movies ?? []);
@@ -193,36 +185,6 @@ export function App() {
       return copy;
     });
   }, []);
-
-  /** Accepting a suggestion puts it on the watchlist, crediting them; a challenge puts it back on as a rewatch. */
-  const acceptSuggestion = async (s: Suggestion) => {
-    const key = String(s.tmdb);
-    const credit = `${s.kind === 'rewatch' ? 'Challenged by' : 'Suggested by'} ${s.userName}${s.note ? `: ${s.note}` : ''}`;
-    if (s.kind === 'rewatch' || watchedKeys.has(key)) {
-      if (!watchedKeys.has(key)) return;
-      updateWatchlist(key, () => ({
-        addedAt: new Date().toISOString(),
-        source: 'site',
-        title: s.title,
-        year: s.year,
-        rewatch: true,
-        why: credit,
-        updatedAt: new Date().toISOString(),
-      }));
-      return;
-    }
-    const movie = watchlistMovies.find((m) => m.key === key) ?? (await fetchMovieDetails(s.tmdb, 'watchlist'));
-    setWatchlistMovies((all) => (all.some((m) => m.key === key) ? all : [...all, movie]));
-    updateWatchlist(key, (prev) => ({
-      ...prev,
-      ...(prev.removed ? { addedAt: new Date().toISOString(), source: 'site' as const } : {}),
-      removed: undefined,
-      title: movie.title,
-      year: movie.year,
-      why: prev.why ?? credit,
-      updatedAt: new Date().toISOString(),
-    }));
-  };
 
   const addToWatchlist = (movie: Movie) => {
     setWatchlistMovies((all) => (all.some((m) => m.key === movie.key) ? all : [...all, movie]));
@@ -383,7 +345,6 @@ export function App() {
           watched={watchedKeys}
           listed={new Set(listed.map((m) => m.key))}
           ratings={ratings}
-          onAccept={acceptSuggestion}
           onOpen={(key, target) => {
             switchTab(target);
             setOpenKey(key);

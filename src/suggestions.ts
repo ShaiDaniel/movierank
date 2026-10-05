@@ -251,3 +251,32 @@ export async function searchTmdbPublic(query: string): Promise<SearchResult[]> {
       overview: m.overview,
     }));
 }
+
+// --- Votes (one per signed-in user per suggestion or challenge) ---------------------
+
+export interface Vote {
+  userId: string;
+  userName: string;
+  value: 1 | -1;
+}
+
+/** All votes, grouped by suggestion id. */
+export async function loadVotes(): Promise<Record<string, Vote[]>> {
+  if (!suggestionsEnabled) return {};
+  const { store, db } = await services();
+  const snap = await store.getDocs(store.collectionGroup(db, 'votes'));
+  const byParent: Record<string, Vote[]> = {};
+  for (const d of snap.docs) {
+    const x = d.data();
+    (byParent[d.ref.parent.parent!.id] ??= []).push({ userId: d.id, userName: x.userName, value: x.value === -1 ? -1 : 1 });
+  }
+  return byParent;
+}
+
+/** Sets my vote; null removes it. The vote document id is the voter's uid, so there's one per person. */
+export async function castVote(suggestionId: string, value: 1 | -1 | null) {
+  const { store, db, u } = await signedInUser();
+  const ref = store.doc(db, 'suggestions', suggestionId, 'votes', u.uid);
+  if (value === null) await store.deleteDoc(ref);
+  else await store.setDoc(ref, { value, userName: (u.displayName ?? u.email ?? 'Someone').slice(0, 100) });
+}

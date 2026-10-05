@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { SITE, VERDICT_BY_ID, tmdbImage } from '../config';
-import { useEditMode } from '../edit';
 import {
   addSuggestion,
   deleteSuggestion,
@@ -9,6 +8,7 @@ import {
   setSuggestionStatus,
   signIn,
   type Suggestion,
+  type SuggestionKind,
 } from '../suggestions';
 import { useSocial } from '../social';
 import type { Ratings, SearchResult } from '../types';
@@ -18,21 +18,37 @@ interface Props {
   watched: Set<string>;
   listed: Set<string>;
   ratings: Ratings;
-  /** Adds the movie to the watchlist (as a rewatch for challenges); needs edit mode. */
-  onAccept: (s: Suggestion) => Promise<void>;
   onOpen: (key: string, tab: 'watched' | 'watchlist') => void;
 }
 
 const fmt = (d: Date | null | undefined) => (d ? d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
 
-export function SuggestionsPage({ watched, listed, ratings, onAccept, onOpen }: Props) {
-  const editing = useEditMode() !== null;
-  const { suggestions: all, viewer, reload } = useSocial();
-  const [kind, setKind] = useState<'all' | 'watch' | 'rewatch'>('all');
-  const suggestions = kind === 'all' ? all : all.filter((s) => s.kind === kind);
+const LISTS: { kind: SuggestionKind; label: string; intro: string; empty: string }[] = [
+  {
+    kind: 'watch',
+    label: 'Suggested movies',
+    intro: `Movies co-workers think ${SITE.owner} should see. Vote to push the best ones up.`,
+    empty: 'No suggestions yet. Be the first!',
+  },
+  {
+    kind: 'rewatch',
+    label: 'Challenges',
+    intro: `Verdicts co-workers disagree with: “watch it again!”. Challenge one from the movie's page; vote on the others.`,
+    empty: 'No challenges yet. Disagree with a verdict? Open the movie and challenge it.',
+  },
+];
+
+/**
+ * Co-workers' suggestions and challenges: two separate lists, each sorted by votes.
+ * They live only here; accepting one marks it and never changes the watchlist.
+ */
+export function SuggestionsPage({ watched, listed, ratings, onOpen }: Props) {
+  const { suggestions: all, viewer, reload, scoreOf, myVote, vote, votes } = useSocial();
+  const [kind, setKind] = useState<SuggestionKind>('watch');
   const [suggesting, setSuggesting] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const list = LISTS.find((l) => l.kind === kind)!;
 
   const run = async (id: string, action: () => Promise<void>) => {
     setBusy(id);
@@ -47,22 +63,67 @@ export function SuggestionsPage({ watched, listed, ratings, onAccept, onOpen }: 
     }
   };
 
-  const pending = suggestions.filter((s) => s.status === 'pending');
-  const decided = suggestions.filter((s) => s.status !== 'pending');
+  const byVotes = (a: Suggestion, b: Suggestion) =>
+    scoreOf(b.id) - scoreOf(a.id) || (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0);
+  const ofKind = all.filter((s) => s.kind === kind);
+  const open = ofKind.filter((s) => s.status === 'pending').sort(byVotes);
+  const decided = ofKind.filter((s) => s.status !== 'pending').sort(byVotes);
   const owner = viewer?.isOwner;
+
+  const voteBox = (s: Suggestion) => {
+    const mine = myVote(s.id);
+    const voters = votes[s.id] ?? [];
+    const names = (v: 1 | -1) =>
+      voters
+        .filter((x) => x.value === v)
+        .map((x) => x.userName)
+        .join(', ');
+    const press = (v: 1 | -1) => (viewer ? vote(s.id, v) : signIn().catch((e) => setError(String(e.message ?? e))));
+    const score = scoreOf(s.id);
+    const ups = voters.filter((x) => x.value === 1).length;
+    const downs = voters.length - ups;
+    return (
+      <div className="vote-box">
+        <button
+          type="button"
+          className={`vote up ${mine === 1 ? 'on' : ''}`}
+          aria-label="Vote up"
+          aria-pressed={mine === 1}
+          title={names(1) ? `Up: ${names(1)}` : viewer ? 'Vote up' : 'Sign in to vote'}
+          onClick={() => press(1)}
+        >
+          ▲
+        </button>
+        <span className="vote-score" title={`${ups} up · ${downs} down`}>
+          {score > 0 ? `+${score}` : score}
+        </span>
+        <button
+          type="button"
+          className={`vote down ${mine === -1 ? 'on' : ''}`}
+          aria-label="Vote down"
+          aria-pressed={mine === -1}
+          title={names(-1) ? `Down: ${names(-1)}` : viewer ? 'Vote down' : 'Sign in to vote'}
+          onClick={() => press(-1)}
+        >
+          ▼
+        </button>
+      </div>
+    );
+  };
 
   const item = (s: Suggestion) => {
     const key = String(s.tmdb);
     const mine = viewer?.uid === s.userId;
+    const rewatch = s.kind === 'rewatch';
     return (
       <li key={s.id} className={`suggestion ${s.status}`}>
+        {voteBox(s)}
         {s.poster ? <img src={tmdbImage(s.poster, 'w92')!} alt="" loading="lazy" /> : <span className="no-photo small-poster" />}
         <div className="suggestion-text">
           <strong>
-            {s.kind === 'rewatch' && <span className="kind-tag">⚔ Challenge</span>}
             {s.title} {s.year && <span className="muted">({s.year})</span>}
           </strong>
-          {s.kind === 'rewatch' && (
+          {rewatch && (
             <span className="small">
               {SITE.owner}'s verdict: <b>{ratings[key]?.verdict ? VERDICT_BY_ID[ratings[key].verdict!].label : 'not ranked'}</b>
               {s.proposedVerdict && (
@@ -81,53 +142,43 @@ export function SuggestionsPage({ watched, listed, ratings, onAccept, onOpen }: 
           {s.status !== 'pending' && (
             <span className={`status-tag ${s.status}`}>
               {s.status === 'accepted'
-                ? s.kind === 'rewatch'
-                  ? '✓ Will rewatch'
-                  : '✓ Added to the watchlist'
-                : s.kind === 'rewatch'
-                  ? 'Standing by the verdict'
-                  : 'Not for me'} {s.decidedAt && `· ${fmt(s.decidedAt)}`}
+                ? `✓ ${SITE.owner} will ${rewatch ? 'rewatch' : 'watch'} it`
+                : rewatch
+                  ? `${SITE.owner} stands by the verdict`
+                  : 'Not for me'}{' '}
+              {s.decidedAt && `· ${fmt(s.decidedAt)}`}
             </span>
           )}
-          {s.kind === 'watch' && watched.has(key) && (
+          {(rewatch || watched.has(key)) && (
             <button type="button" className="link small" onClick={() => onOpen(key, 'watched')}>
-              {SITE.owner} has seen it — see the verdict
+              {rewatch ? 'See the movie and verdict' : `${SITE.owner} has seen it — see the verdict`}
             </button>
           )}
-          {s.kind === 'rewatch' && (
-            <button type="button" className="link small" onClick={() => onOpen(key, 'watched')}>
-              See the movie and verdict
-            </button>
-          )}
-          {s.kind === 'watch' && !watched.has(key) && listed.has(key) && s.status !== 'accepted' && (
-            <span className="muted small">Already on the watchlist</span>
+          {!rewatch && !watched.has(key) && listed.has(key) && (
+            <span className="muted small">Already on {SITE.owner}'s watchlist</span>
           )}
           <Comments suggestionId={s.id} />
         </div>
         <div className="suggestion-actions">
           {owner && s.status === 'pending' && (
             <>
-              <button
-                type="button"
-                className="btn primary"
-                disabled={!editing || busy !== null}
-                title={editing ? (s.kind === 'rewatch' ? 'Put it back on my watchlist as a rewatch' : 'Add to my watchlist') : 'Unlock editing (✎ Edit) first'}
-                onClick={() => run(s.id, async () => {
-                  await onAccept(s);
-                  await setSuggestionStatus(s.id, 'accepted');
-                })}
-              >
-                {busy === s.id ? '…' : s.kind === 'rewatch' ? 'Will rewatch' : 'Accept'}
+              <button type="button" className="btn primary" disabled={busy !== null} onClick={() => run(s.id, () => setSuggestionStatus(s.id, 'accepted'))}>
+                {busy === s.id ? '…' : rewatch ? 'Will rewatch' : "I'll watch it"}
               </button>
               <button type="button" className="btn" disabled={busy !== null} onClick={() => run(s.id, () => setSuggestionStatus(s.id, 'dismissed'))}>
-                Dismiss
+                {rewatch ? 'Stand by it' : 'Not for me'}
               </button>
             </>
           )}
           {owner && s.status !== 'pending' && (
-            <button type="button" className="link small" disabled={busy !== null} onClick={() => run(s.id, () => deleteSuggestion(s.id))}>
-              Delete
-            </button>
+            <>
+              <button type="button" className="link small" disabled={busy !== null} onClick={() => run(s.id, () => setSuggestionStatus(s.id, 'pending'))}>
+                Undo
+              </button>
+              <button type="button" className="link small" disabled={busy !== null} onClick={() => run(s.id, () => deleteSuggestion(s.id))}>
+                Delete
+              </button>
+            </>
           )}
           {!owner && mine && s.status === 'pending' && (
             <button type="button" className="link small" disabled={busy !== null} onClick={() => run(s.id, () => deleteSuggestion(s.id))}>
@@ -141,14 +192,24 @@ export function SuggestionsPage({ watched, listed, ratings, onAccept, onOpen }: 
 
   return (
     <div className="suggestions-page">
+      <nav className="segmented" aria-label="Lists">
+        {LISTS.map((l) => {
+          const count = all.filter((s) => s.kind === l.kind && s.status === 'pending').length;
+          return (
+            <button key={l.kind} type="button" className={kind === l.kind ? 'active' : ''} onClick={() => setKind(l.kind)}>
+              {l.kind === 'rewatch' && '⚔ '}
+              {l.label} {count > 0 && <span className="count">{count}</span>}
+            </button>
+          );
+        })}
+      </nav>
+
       <div className="suggestions-bar">
-        <p className="muted">
-          Know a movie {SITE.owner} should see? Suggest it. Think a verdict is wrong? Challenge it from the movie's page.
-        </p>
+        <p className="muted">{list.intro}</p>
         {viewer ? (
           <>
             <AccountButton />
-            {!owner && (
+            {!owner && kind === 'watch' && (
               <button type="button" className="btn primary" onClick={() => setSuggesting(true)} disabled={!publicSearchEnabled}>
                 + Suggest a movie
               </button>
@@ -160,27 +221,9 @@ export function SuggestionsPage({ watched, listed, ratings, onAccept, onOpen }: 
           </button>
         )}
       </div>
-      {owner && !editing && pending.length > 0 && (
-        <p className="chart-note">To accept suggestions, also unlock editing with ✎ Edit (accepting adds the movie to your watchlist).</p>
-      )}
       {error && <p className="error">{error}</p>}
 
-      <nav className="chips" aria-label="Show">
-        {(
-          [
-            ['all', 'All'],
-            ['watch', 'To watch'],
-            ['rewatch', 'Challenges'],
-          ] as const
-        ).map(([id, label]) => (
-          <button key={id} type="button" className={`chip ${kind === id ? 'selected' : ''}`} onClick={() => setKind(id)}>
-            {label} <span className="count">{(id === 'all' ? all : all.filter((x) => x.kind === id)).filter((x) => x.status === 'pending').length}</span>
-          </button>
-        ))}
-      </nav>
-
-      <h2>Waiting for {SITE.owner} {pending.length > 0 && <span className="count">{pending.length}</span>}</h2>
-      {pending.length ? <ul className="suggestion-list">{pending.map(item)}</ul> : <p className="muted">No open suggestions right now.</p>}
+      {open.length ? <ul className="suggestion-list">{open.map(item)}</ul> : <p className="muted">{list.empty}</p>}
 
       {decided.length > 0 && (
         <>
@@ -193,7 +236,7 @@ export function SuggestionsPage({ watched, listed, ratings, onAccept, onOpen }: 
         <SuggestDialog
           watched={watched}
           listed={listed}
-          pending={new Set(pending.map((s) => String(s.tmdb)))}
+          pending={new Set(all.filter((s) => s.kind === 'watch' && s.status === 'pending').map((s) => String(s.tmdb)))}
           onClose={() => setSuggesting(false)}
           onSubmit={async (movie, note) => {
             await addSuggestion(movie, note);

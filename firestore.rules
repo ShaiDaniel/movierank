@@ -1,7 +1,7 @@
 rules_version = '2';
 
 // Security rules for MovieRank co-worker features: suggestions, rank challenges,
-// comments, and each co-worker's private list.
+// comments and votes on both, and each co-worker's private list.
 // Published in Firebase console → Firestore Database → Rules.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -56,10 +56,22 @@ service cloud.firestore {
           && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1000;
         allow delete: if isOwner() || (signedIn() && resource.data.userId == request.auth.uid);
       }
+
+      // One vote per signed-in user (the document id is their uid): up (1) or down (-1).
+      match /votes/{voterId} {
+        allow create, update: if signedIn() && request.auth.uid == voterId
+          && request.resource.data.keys().hasOnly(['value', 'userName'])
+          && request.resource.data.value in [1, -1]
+          && request.resource.data.userName is string && request.resource.data.userName.size() <= 100;
+        allow delete: if signedIn() && request.auth.uid == voterId;
+      }
     }
 
-    // Comments are public (read across all suggestions in one query).
+    // Comments and votes are public (each read across all suggestions in one query).
     match /{path=**}/comments/{commentId} {
+      allow read: if true;
+    }
+    match /{path=**}/votes/{voterId} {
       allow read: if true;
     }
 

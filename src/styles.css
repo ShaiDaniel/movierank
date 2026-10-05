@@ -438,3 +438,22 @@ kbd { padding: 1px 6px; border-radius: 4px; background: var(--panel-2); border: 
 @media (max-width: 600px) {
   .about-verdicts li, .about-scores div { grid-template-columns: 1fr; gap: 4px; }
 }
+
+/* Voting + the two suggestion lists */
+.suggestion { grid-template-columns: 40px 60px 1fr auto; }
+.vote-box { display: grid; justify-items: center; gap: 2px; align-self: start; }
+.vote {
+  width: 32px; height: 26px; padding: 0; border-radius: 6px; cursor: pointer; font-size: 0.8rem; line-height: 1;
+  background: var(--panel-2); border: 1px solid var(--border); color: var(--muted);
+}
+.vote:hover { color: var(--text); border-color: var(--muted); }
+.vote.up.on { background: #22c55e; border-color: #22c55e; color: #111; }
+.vote.down.on { background: #f87171; border-color: #f87171; color: #111; }
+.vote-score { font-weight: 700; font-variant-numeric: tabular-nums; font-size: 0.95rem; }
+.segmented { display: inline-flex; padding: 3px; gap: 3px; border-radius: 10px; background: var(--panel); border: 1px solid var(--border); justify-self: start; }
+.segmented button { padding: 7px 14px; border-radius: 8px; border: none; background: none; cursor: pointer; color: var(--muted); font-weight: 600; white-space: nowrap; }
+.segmented button.active { background: var(--panel-2); color: var(--text); box-shadow: 0 0 0 1px var(--border); }
+@media (max-width: 600px) {
+  .suggestion { grid-template-columns: 36px 48px 1fr; }
+  .suggestion-actions { grid-column: 1 / -1; }
+}

@@ -3,7 +3,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   addToMyList,
+  castVote,
   loadComments,
+  loadVotes,
   loadMyList,
   loadSuggestions,
   removeFromMyList,
@@ -14,6 +16,7 @@ import {
   type ListItem,
   type Suggestion,
   type Viewer,
+  type Vote,
 } from './suggestions';
 
 interface Social {
@@ -21,6 +24,12 @@ interface Social {
   viewer: Viewer | null;
   suggestions: Suggestion[];
   comments: Record<string, Comment[]>;
+  votes: Record<string, Vote[]>;
+  /** Net score (ups minus downs) of a suggestion or challenge. */
+  scoreOf: (id: string) => number;
+  myVote: (id: string) => 1 | -1 | null;
+  /** Votes up or down; voting the same way again removes the vote. */
+  vote: (id: string, value: 1 | -1) => Promise<void>;
   myList: ListItem[];
   reload: () => Promise<void>;
   isOnMyList: (key: string) => boolean;
@@ -34,11 +43,14 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   const [viewer, setViewer] = useState<Viewer | null>(null);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [comments, setComments] = useState<Record<string, Comment[]>>({});
+  const [votes, setVotes] = useState<Record<string, Vote[]>>({});
   const [myList, setMyList] = useState<ListItem[]>([]);
 
   // Loaded independently, so one failing (e.g. comments) doesn't hide the other.
   const reload = useCallback(async () => {
-    const [s, c] = await Promise.allSettled([loadSuggestions(), loadComments()]);
+    const [s, c, v] = await Promise.allSettled([loadSuggestions(), loadComments(), loadVotes()]);
+    if (v.status === 'fulfilled') setVotes(v.value);
+    else console.error('Loading votes failed', v.reason);
     if (s.status === 'fulfilled') setSuggestions(s.value);
     else console.error('Loading suggestions failed', s.reason);
     if (c.status === 'fulfilled') setComments(c.value);
@@ -67,6 +79,25 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       viewer,
       suggestions,
       comments,
+      votes,
+      scoreOf: (id) => (votes[id] ?? []).reduce((n, v) => n + v.value, 0),
+      myVote: (id) => (votes[id] ?? []).find((v) => v.userId === viewer?.uid)?.value ?? null,
+      vote: async (id, value) => {
+        if (!viewer) return;
+        const current = (votes[id] ?? []).find((v) => v.userId === viewer.uid)?.value ?? null;
+        const next = current === value ? null : value;
+        // Optimistic: show it right away, then save.
+        setVotes((all) => {
+          const others = (all[id] ?? []).filter((v) => v.userId !== viewer.uid);
+          return { ...all, [id]: next ? [...others, { userId: viewer.uid, userName: viewer.name, value: next }] : others };
+        });
+        try {
+          await castVote(id, next);
+        } catch (e) {
+          console.error('Voting failed', e);
+          reload();
+        }
+      },
       myList,
       reload,
       isOnMyList: (key) => keys.has(key),
@@ -86,7 +117,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         await setSeenOnMyList(viewer.uid, key, seen);
       },
     };
-  }, [viewer, suggestions, comments, myList, reload]);
+  }, [viewer, suggestions, comments, votes, myList, reload]);
 
   return <SocialContext.Provider value={value}>{children}</SocialContext.Provider>;
 }
