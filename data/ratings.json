@@ -1038,6 +1038,19 @@
   "updatedAt": "2026-10-05T19:55:59.381Z",
   "verdict": "should"
  },
+ "1771": {
+  "scores": {
+   "epic": 8,
+   "fun": 6,
+   "story": 7,
+   "acting": 6,
+   "visuals": 5,
+   "audio": 4,
+   "rewatch": 4,
+   "holdsUp": 5
+  },
+  "updatedAt": "2026-10-05T19:57:12.042Z"
+ },
  "1865": {
   "verdict": "should",
   "scores": {
