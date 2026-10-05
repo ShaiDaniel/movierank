@@ -4,6 +4,7 @@ import { useEditMode } from '../edit';
 import type { PersonRole } from '../filters';
 import type { LoggedWatch, Movie, Play, Provider, Rating, Ratings, WatchlistEntry } from '../types';
 import { LoggedWatches } from './LoggedWatches';
+import { Discussion } from './Discussion';
 import { RatingSummary } from './RatingSummary';
 import { ChallengeButton, ChallengePanel, MyListButton } from './SocialBits';
 import { averageScore } from '../filters';
@@ -179,6 +180,8 @@ export function MovieModal({ movie, rating, movies, ratings, entry, onWatchlistC
               </div>
             )}
           </div>
+
+          <Discussion movie={movie} rating={rating} />
 
           {movie.cast.length > 0 && (
             <>

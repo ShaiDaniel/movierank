@@ -3,6 +3,13 @@ import type { Movie, Rating, ScoreId, VerdictId, Watchlist } from './types';
 
 export type VerdictFilter = VerdictId | 'unrated';
 
+/**
+ * The verdict a movie is filtered under. 'unrated' means nothing at all yet; a movie with
+ * scores but no verdict is neither (it isn't "not ranked", it's just missing the verdict).
+ */
+export const verdictOf = (r: Rating | undefined): VerdictFilter | null =>
+  r?.verdict ?? (Object.keys(r?.scores ?? {}).length ? null : 'unrated');
+
 /** People are encoded as "<role>:<name>" so they fit in the URL. */
 export const PERSON_ROLES = {
   d: { label: 'Director', field: 'directors' },
@@ -166,7 +173,10 @@ export function applyFilters(movies: Movie[], ratings: Record<string, Rating>, f
 
   const result = movies.filter((m) => {
     const r = ratings[m.key];
-    if (f.verdicts.length && !f.verdicts.includes(r?.verdict ?? 'unrated')) return false;
+    if (f.verdicts.length) {
+      const v = verdictOf(r);
+      if (!v || !f.verdicts.includes(v)) return false;
+    }
     for (const [id, min] of minEntries) if ((r?.scores?.[id] ?? 0) < min) return false;
     if (f.genres.length && !f.genres.every((g) => m.genres.includes(g))) return false;
     for (const code of f.people) {

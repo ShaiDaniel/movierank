@@ -35,18 +35,18 @@ export function AccountButton() {
 }
 
 /** Comment thread under a suggestion or challenge. */
-export function Comments({ suggestionId }: { suggestionId: string }) {
+export function Comments({ thread }: { thread: string }) {
   const { viewer, comments, reload } = useSocial();
   const [open, setOpen] = useState(false);
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
-  const list = comments[suggestionId] ?? [];
+  const list = comments[thread] ?? [];
 
   const send = async () => {
     if (!text.trim()) return;
     setBusy(true);
     try {
-      await addComment(suggestionId, text);
+      await addComment(thread, text);
       setText('');
       await reload();
     } finally {
@@ -68,7 +68,7 @@ export function Comments({ suggestionId }: { suggestionId: string }) {
                 <span className="comment-meta">
                   <b>{c.userName}</b> · {fmt(c.createdAt)}
                   {(viewer?.uid === c.userId || viewer?.isOwner) && (
-                    <button type="button" className="link small" onClick={() => deleteComment(suggestionId, c.id).then(reload)}>
+                    <button type="button" className="link small" onClick={() => deleteComment(thread, c.id).then(reload)}>
                       delete
                     </button>
                   )}

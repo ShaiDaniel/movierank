@@ -1,6 +1,6 @@
 import { useMemo, useState, type CSSProperties } from 'react';
 import { SCORES, VERDICTS, isMajorStreamer } from '../config';
-import { PERSON_ROLES, SORTS, WATCHLIST_SORTS, personNames, type Filters, type PersonRole, type SortKey, type VerdictFilter } from '../filters';
+import { PERSON_ROLES, SORTS, verdictOf, WATCHLIST_SORTS, personNames, type Filters, type PersonRole, type SortKey, type VerdictFilter } from '../filters';
 import type { Movie, Ratings } from '../types';
 
 interface Props {
@@ -39,7 +39,8 @@ export function FilterPanel({ movies, ratings, filters, onChange, mode }: Props)
   const verdictCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const m of movies) {
-      const v = ratings[m.key]?.verdict ?? 'unrated';
+      const v = verdictOf(ratings[m.key]);
+      if (!v) continue;
       counts[v] = (counts[v] ?? 0) + 1;
     }
     return counts;

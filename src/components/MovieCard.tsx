@@ -1,4 +1,6 @@
 import type { CSSProperties } from 'react';
+import { useSocial } from '../social';
+import { movieThread } from '../suggestions';
 import { VERDICT_BY_ID, tmdbImage } from '../config';
 import { averageScore } from '../filters';
 import type { Movie, Rating, WatchlistEntry } from '../types';
@@ -12,6 +14,7 @@ interface Props {
 }
 
 export function MovieCard({ movie, rating, entry, onOpen }: Props) {
+  const talk = useSocial().comments[movieThread(movie.key)]?.length ?? 0;
   const verdict = rating?.verdict ? VERDICT_BY_ID[rating.verdict] : null;
   const poster = tmdbImage(movie.poster, 'w342');
   const epic = rating?.scores?.epic;
@@ -49,6 +52,7 @@ export function MovieCard({ movie, rating, entry, onOpen }: Props) {
         <span className="card-meta">
           {movie.year}
           {movie.directors[0] ? ` · ${movie.directors[0]}` : ''}
+          {talk > 0 && <span className="card-talk" title={`${talk} in the discussion`}> · 💬 {talk}</span>}
         </span>
         {rating?.note && <span className="card-note">“{rating.note}”</span>}
         {entry?.why && <span className="card-note">{entry.why}</span>}

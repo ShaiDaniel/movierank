@@ -144,54 +144,69 @@ export async function deleteSuggestion(id: string) {
   await store.deleteDoc(store.doc(db, 'suggestions', id));
 }
 
-// --- Comments (on suggestions and challenges) --------------------------------------
+// --- Comments: threads on suggestions/challenges and debates on movies ----------------
+// A thread is the document its comments hang under: "suggestions/<id>" or "movies/<key>".
+
+export type Stance = 'agree' | 'disagree';
 
 export interface Comment {
   id: string;
-  suggestionId: string;
+  thread: string;
   text: string;
+  /** In a movie debate: agrees or disagrees with the owner's verdict. */
+  stance?: Stance;
+  /** Posted by the owner (checked by the security rules). */
+  byOwner?: boolean;
   userId: string;
   userName: string;
   userPhoto: string | null;
   createdAt: Date | null;
 }
 
-/** All comments, grouped by suggestion id, oldest first. */
+export const suggestionThread = (id: string) => `suggestions/${id}`;
+export const movieThread = (key: string) => `movies/${key}`;
+
+/** All comments, grouped by thread, oldest first. */
 export async function loadComments(): Promise<Record<string, Comment[]>> {
   if (!suggestionsEnabled) return {};
   const { store, db } = await services();
   // Sorted here rather than in the query, which would need a collection-group index.
   const snap = await store.getDocs(store.collectionGroup(db, 'comments'));
-  const byParent: Record<string, Comment[]> = {};
+  const byThread: Record<string, Comment[]> = {};
   for (const d of snap.docs) {
     const x = d.data();
-    const suggestionId = d.ref.parent.parent!.id;
-    (byParent[suggestionId] ??= []).push({
+    const parent = d.ref.parent.parent!;
+    const thread = `${parent.parent.id}/${parent.id}`;
+    (byThread[thread] ??= []).push({
       id: d.id,
-      suggestionId,
+      thread,
       text: x.text,
+      stance: x.stance,
+      byOwner: Boolean(x.byOwner),
       userId: x.userId,
       userName: x.userName,
       userPhoto: x.userPhoto ?? null,
       createdAt: x.createdAt?.toDate?.() ?? null,
     });
   }
-  for (const list of Object.values(byParent)) list.sort((a, b) => (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0));
-  return byParent;
+  for (const list of Object.values(byThread)) list.sort((a, b) => (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0));
+  return byThread;
 }
 
-export async function addComment(suggestionId: string, text: string) {
+export async function addComment(thread: string, text: string, stance?: Stance) {
   const { store, db, u } = await signedInUser();
-  await store.addDoc(store.collection(db, 'suggestions', suggestionId, 'comments'), {
+  await store.addDoc(store.collection(db, thread, 'comments'), {
     text: text.trim().slice(0, 1000),
+    ...(stance ? { stance } : {}),
+    ...(toViewer(u).isOwner ? { byOwner: true } : {}),
     ...authorOf(u),
     createdAt: store.serverTimestamp(),
   });
 }
 
-export async function deleteComment(suggestionId: string, commentId: string) {
+export async function deleteComment(thread: string, commentId: string) {
   const { store, db } = await services();
-  await store.deleteDoc(store.doc(db, 'suggestions', suggestionId, 'comments', commentId));
+  await store.deleteDoc(store.doc(db, thread, 'comments', commentId));
 }
 
 // --- My list (each co-worker's private list of movies from this site) --------------

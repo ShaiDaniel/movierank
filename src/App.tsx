@@ -97,8 +97,10 @@ export function App() {
 
   // Reloads when editing is unlocked, to edit the latest data in the repo rather than the last deploy.
   useEffect(() => {
+    let stale = false;
     loadAll()
       .then((d) => {
+        if (stale) return;
         setTraktMovies(d.movies);
         setWatches(d.watches);
         setLoggedMovies(d.loggedMovies);
@@ -106,7 +108,10 @@ export function App() {
         setWatchlistMovies(d.watchlistMovies);
         setWatchlist(d.watchlist);
       })
-      .catch((e) => setError(String(e.message ?? e)));
+      .catch((e) => !stale && setError(String(e.message ?? e)));
+    return () => {
+      stale = true;
+    };
   }, [mode]);
 
   // Keep the URL in sync so a filtered view (or an open movie) can be shared as a link.

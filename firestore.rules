@@ -1,7 +1,7 @@
 rules_version = '2';
 
 // Security rules for MovieRank co-worker features: suggestions, rank challenges,
-// comments and votes on both, and each co-worker's private list.
+// comments and votes on both, debates on movies, and each co-worker's private list.
 // Published in Firebase console → Firestore Database → Rules.
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -50,8 +50,9 @@ service cloud.firestore {
       // Anyone signed in can comment, as themselves; authors and the owner can delete.
       match /comments/{commentId} {
         allow create: if signedIn()
-          && request.resource.data.keys().hasOnly(['text', 'userId', 'userName', 'userPhoto', 'createdAt'])
+          && request.resource.data.keys().hasOnly(['text', 'byOwner', 'userId', 'userName', 'userPhoto', 'createdAt'])
           && asSelf(request.resource.data)
+          && (!('byOwner' in request.resource.data) || (request.resource.data.byOwner == true && isOwner()))
           && request.resource.data.text is string
           && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1000;
         allow delete: if isOwner() || (signedIn() && resource.data.userId == request.auth.uid);
@@ -67,7 +68,20 @@ service cloud.firestore {
       }
     }
 
-    // Comments and votes are public (each read across all suggestions in one query).
+    // Debates on movies: anyone signed in can post, optionally agreeing or disagreeing with
+    // the verdict; only the owner's posts may carry byOwner. Authors and the owner can delete.
+    match /movies/{movieKey}/comments/{commentId} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['text', 'stance', 'byOwner', 'userId', 'userName', 'userPhoto', 'createdAt'])
+        && asSelf(request.resource.data)
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1000
+        && (!('stance' in request.resource.data) || request.resource.data.stance in ['agree', 'disagree'])
+        && (!('byOwner' in request.resource.data) || (request.resource.data.byOwner == true && isOwner()));
+      allow delete: if isOwner() || (signedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    // Comments and votes are public (each read across all threads in one query).
     match /{path=**}/comments/{commentId} {
       allow read: if true;
     }

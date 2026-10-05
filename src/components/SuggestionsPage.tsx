@@ -7,6 +7,7 @@ import {
   searchTmdbPublic,
   setSuggestionStatus,
   signIn,
+  suggestionThread,
   type Suggestion,
   type SuggestionKind,
 } from '../suggestions';
@@ -157,7 +158,7 @@ export function SuggestionsPage({ watched, listed, ratings, onOpen }: Props) {
           {!rewatch && !watched.has(key) && listed.has(key) && (
             <span className="muted small">Already on {SITE.owner}'s watchlist</span>
           )}
-          <Comments suggestionId={s.id} />
+          <Comments thread={suggestionThread(s.id)} />
         </div>
         <div className="suggestion-actions">
           {owner && s.status === 'pending' && (

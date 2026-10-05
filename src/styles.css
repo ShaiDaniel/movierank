@@ -456,3 +456,15 @@ kbd { padding: 1px 6px; border-radius: 4px; background: var(--panel-2); border: 
   .suggestion { grid-template-columns: 36px 48px 1fr; }
   .suggestion-actions { grid-column: 1 / -1; }
 }
+
+/* Debates */
+.discussion { margin-top: 22px; display: grid; gap: 10px; }
+.discussion h3 { margin: 0; }
+.discussion .agree { color: #4ade80; }
+.discussion .disagree { color: #f87171; }
+.discussion-form { display: grid; gap: 8px; }
+.stance { font-size: 0.75rem; padding: 0 6px; border-radius: 999px; border: 1px solid var(--border); }
+.stance.agree { color: #4ade80; border-color: #4ade8066; }
+.stance.disagree { color: #f87171; border-color: #f8717166; }
+.owner-tag { font-size: 0.7rem; padding: 0 6px; border-radius: 999px; background: var(--accent); color: var(--accent-text); font-weight: 700; }
+.card-talk { white-space: nowrap; }
