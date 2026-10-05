@@ -850,6 +850,34 @@
   },
   "updatedAt": "2026-10-05T20:44:08.400Z"
  },
+ "658": {
+  "verdict": "may",
+  "scores": {
+   "epic": 9,
+   "fun": 7,
+   "story": 6,
+   "acting": 6,
+   "visuals": 5,
+   "audio": 6,
+   "rewatch": 4,
+   "holdsUp": 3
+  },
+  "updatedAt": "2026-10-05T20:44:24.810Z"
+ },
+ "660": {
+  "verdict": "may",
+  "scores": {
+   "epic": 9,
+   "fun": 7,
+   "story": 6,
+   "acting": 5,
+   "visuals": 4,
+   "audio": 6,
+   "rewatch": 4,
+   "holdsUp": 3
+  },
+  "updatedAt": "2026-10-05T20:44:29.896Z"
+ },
  "670": {
   "scores": {
    "fun": 8,
