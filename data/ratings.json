@@ -1751,6 +1751,20 @@
    "holdsUp": 7
   }
  },
+ "4951": {
+  "verdict": "should",
+  "updatedAt": "2026-10-06T15:21:02.838Z",
+  "scores": {
+   "fun": 8,
+   "epic": 7,
+   "story": 6,
+   "acting": 7,
+   "visuals": 5,
+   "audio": 5,
+   "rewatch": 5,
+   "holdsUp": 6
+  }
+ },
  "5915": {
   "verdict": "maynot",
   "updatedAt": "2026-10-05T04:59:34.703Z",
