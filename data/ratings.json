@@ -1720,6 +1720,20 @@
   },
   "updatedAt": "2026-10-05T20:16:29.119Z"
  },
+ "1584": {
+  "verdict": "should",
+  "updatedAt": "2026-10-07T05:24:23.332Z",
+  "scores": {
+   "fun": 8,
+   "epic": 6,
+   "story": 6,
+   "acting": 7,
+   "visuals": 4,
+   "audio": 6,
+   "rewatch": 6,
+   "holdsUp": 5
+  }
+ },
  "1598": {
   "verdict": "may",
   "updatedAt": "2026-10-07T05:08:00.878Z",
@@ -2025,6 +2039,20 @@
    "holdsUp": 6
   }
  },
+ "5876": {
+  "verdict": "may",
+  "updatedAt": "2026-10-07T05:27:08.219Z",
+  "scores": {
+   "fun": 6,
+   "epic": 4,
+   "story": 7,
+   "acting": 7,
+   "visuals": 6,
+   "audio": 5,
+   "rewatch": 3,
+   "holdsUp": 5
+  }
+ },
  "5915": {
   "verdict": "maynot",
   "updatedAt": "2026-10-05T04:59:34.703Z",
@@ -2077,6 +2105,20 @@
    "visuals": 5,
    "audio": 4,
    "rewatch": 4,
+   "holdsUp": 5
+  }
+ },
+ "7485": {
+  "verdict": "may",
+  "updatedAt": "2026-10-07T05:23:23.700Z",
+  "scores": {
+   "fun": 7,
+   "epic": 4,
+   "story": 8,
+   "acting": 7,
+   "visuals": 4,
+   "audio": 4,
+   "rewatch": 3,
    "holdsUp": 5
   }
  },
@@ -2786,6 +2828,20 @@
    "audio": 6,
    "rewatch": 5,
    "holdsUp": 5
+  }
+ },
+ "64720": {
+  "verdict": "may",
+  "updatedAt": "2026-10-07T05:22:38.922Z",
+  "scores": {
+   "fun": 6,
+   "epic": 6,
+   "story": 7,
+   "acting": 7,
+   "visuals": 6,
+   "audio": 5,
+   "rewatch": 4,
+   "holdsUp": 4
   }
  },
  "68718": {
@@ -3649,6 +3705,34 @@
    "holdsUp": 5
   }
  },
+ "302946": {
+  "verdict": "should",
+  "updatedAt": "2026-10-07T05:22:54.141Z",
+  "scores": {
+   "fun": 7,
+   "epic": 5,
+   "story": 6,
+   "acting": 6,
+   "visuals": 5,
+   "audio": 5,
+   "rewatch": 5,
+   "holdsUp": 5
+  }
+ },
+ "308266": {
+  "verdict": "should",
+  "updatedAt": "2026-10-07T05:26:46.009Z",
+  "scores": {
+   "fun": 7,
+   "epic": 4,
+   "story": 7,
+   "acting": 7,
+   "visuals": 5,
+   "audio": 4,
+   "rewatch": 5,
+   "holdsUp": 5
+  }
+ },
  "315635": {
   "verdict": "may",
   "updatedAt": "2026-10-05T19:59:37.408Z",
@@ -4064,6 +4148,20 @@
    "holdsUp": 4
   },
   "updatedAt": "2026-10-05T20:43:21.054Z"
+ },
+ "406990": {
+  "verdict": "should",
+  "updatedAt": "2026-10-07T05:24:47.663Z",
+  "scores": {
+   "fun": 8,
+   "epic": 5,
+   "story": 8,
+   "acting": 7,
+   "visuals": 6,
+   "audio": 4,
+   "rewatch": 2,
+   "holdsUp": 6
+  }
  },
  "414906": {
   "verdict": "may",
@@ -4620,6 +4718,20 @@
   },
   "updatedAt": "2026-10-05T20:37:45.499Z"
  },
+ "579583": {
+  "verdict": "neutral",
+  "updatedAt": "2026-10-07T05:26:28.387Z",
+  "scores": {
+   "fun": 4,
+   "epic": 3,
+   "story": 6,
+   "acting": 7,
+   "visuals": 4,
+   "audio": 4,
+   "rewatch": 2,
+   "holdsUp": 5
+  }
+ },
  "582014": {
   "verdict": "may",
   "updatedAt": "2026-10-07T05:05:23.757Z",
@@ -4746,6 +4858,19 @@
    "holdsUp": 6
   }
  },
+ "636565": {
+  "scores": {
+   "fun": 8,
+   "epic": 5,
+   "story": 8,
+   "acting": 7,
+   "visuals": 5,
+   "audio": 5,
+   "rewatch": 5,
+   "holdsUp": 6
+  },
+  "updatedAt": "2026-10-07T05:26:01.230Z"
+ },
  "640146": {
   "verdict": "should",
   "scores": {
@@ -4813,6 +4938,20 @@
   },
   "updatedAt": "2026-10-07T05:04:22.429Z"
  },
+ "799876": {
+  "verdict": "should",
+  "updatedAt": "2026-10-07T05:25:06.614Z",
+  "scores": {
+   "fun": 6,
+   "epic": 5,
+   "story": 8,
+   "acting": 8,
+   "visuals": 4,
+   "audio": 4,
+   "rewatch": 3,
+   "holdsUp": 5
+  }
+ },
  "823464": {
   "verdict": "may",
   "scores": {
@@ -4852,6 +4991,20 @@
    "holdsUp": 5
   },
   "updatedAt": "2026-10-07T05:15:34.410Z"
+ },
+ "870028": {
+  "verdict": "should",
+  "scores": {
+   "fun": 7,
+   "epic": 5,
+   "story": 6,
+   "acting": 6,
+   "visuals": 5,
+   "audio": 5,
+   "rewatch": 5,
+   "holdsUp": 5
+  },
+  "updatedAt": "2026-10-07T05:22:59.557Z"
  },
  "872585": {
   "verdict": "may",
@@ -4950,6 +5103,20 @@
    "holdsUp": 7
   },
   "updatedAt": "2026-10-06T15:11:44.989Z"
+ },
+ "1101383": {
+  "verdict": "may",
+  "updatedAt": "2026-10-07T05:24:01.109Z",
+  "scores": {
+   "fun": 7,
+   "epic": 4,
+   "story": 6,
+   "acting": 6,
+   "visuals": 7,
+   "audio": 5,
+   "rewatch": 4,
+   "holdsUp": 5
+  }
  },
  "1149947": {
   "verdict": "may",
