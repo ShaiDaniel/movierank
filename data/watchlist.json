@@ -640,6 +640,13 @@
   "title": "Operation Finale",
   "year": 2018
  },
+ "500840": {
+  "addedAt": "2026-10-30T23:58:09.643Z",
+  "source": "site",
+  "title": "I'm Thinking of Ending Things",
+  "year": 2020,
+  "updatedAt": "2026-10-30T23:58:09.644Z"
+ },
  "501929": {
   "addedAt": "2021-05-15T05:09:24.000Z",
   "source": "trakt",
@@ -735,5 +742,12 @@
   "source": "trakt",
   "title": "The Quiet Girl",
   "year": 2022
+ },
+ "1064213": {
+  "addedAt": "2026-10-30T23:03:37.429Z",
+  "source": "site",
+  "title": "Anora",
+  "year": 2024,
+  "updatedAt": "2026-10-30T23:03:37.429Z"
  }
 }
