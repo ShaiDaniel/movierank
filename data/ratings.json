@@ -5058,8 +5058,20 @@
   }
  },
  "500840": {
-  "verdict": "neutral",
-  "updatedAt": "2026-10-30T23:58:22.654Z"
+  "verdict": "maynot",
+  "updatedAt": "2026-10-31T00:01:53.215Z",
+  "scores": {
+   "fun": 3,
+   "epic": 2,
+   "story": 7,
+   "acting": 8,
+   "visuals": 5,
+   "audio": 2,
+   "rewatch": 1,
+   "holdsUp": 6
+  },
+  "note": "Bunch of philosophical shit but not much of a movie ",
+  "review": "It feels like there's going to happen something all the time, but nothing happens, they just talking philosophical and about the us culture. "
  },
  "505177": {
   "verdict": "may",
