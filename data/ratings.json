@@ -5058,8 +5058,8 @@
   }
  },
  "500840": {
-  "verdict": "maynot",
-  "updatedAt": "2026-10-31T00:01:53.215Z",
+  "verdict": "shouldnot",
+  "updatedAt": "2026-10-31T00:21:24.694Z",
   "scores": {
    "fun": 3,
    "epic": 2,
