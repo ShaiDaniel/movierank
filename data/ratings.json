@@ -1625,6 +1625,20 @@
    "holdsUp": 5
   }
  },
+ "855": {
+  "verdict": "must",
+  "updatedAt": "2026-11-10T09:04:20.335Z",
+  "scores": {
+   "fun": 6,
+   "epic": 8,
+   "story": 8,
+   "acting": 7,
+   "visuals": 7,
+   "audio": 6,
+   "rewatch": 5,
+   "holdsUp": 6
+  }
+ },
  "860": {
   "scores": {
    "holdsUp": 6,
@@ -2248,6 +2262,20 @@
    "holdsUp": 5
   },
   "updatedAt": "2026-10-07T05:08:53.732Z"
+ },
+ "3170": {
+  "verdict": "may",
+  "updatedAt": "2026-11-10T09:03:23.649Z",
+  "scores": {
+   "fun": 6,
+   "epic": 8,
+   "story": 7,
+   "acting": 6,
+   "visuals": 5,
+   "audio": 6,
+   "rewatch": 3,
+   "holdsUp": 4
+  }
  },
  "3558": {
   "verdict": "should",
@@ -5584,6 +5612,20 @@
    "visuals": 9,
    "audio": 6,
    "rewatch": 5
+  }
+ },
+ "739547": {
+  "verdict": "may",
+  "updatedAt": "2026-11-10T09:02:58.290Z",
+  "scores": {
+   "fun": 8,
+   "epic": 3,
+   "story": 8,
+   "acting": 6,
+   "visuals": 6,
+   "audio": 6,
+   "rewatch": 5,
+   "holdsUp": 5
   }
  },
  "786892": {
