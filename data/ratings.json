@@ -5478,6 +5478,20 @@
   "updatedAt": "2026-10-01T17:05:41.440Z",
   "verdict": "may"
  },
+ "532865": {
+  "verdict": "may",
+  "updatedAt": "2026-11-13T23:15:26.794Z",
+  "scores": {
+   "fun": 6,
+   "epic": 3,
+   "story": 7,
+   "acting": 7,
+   "visuals": 4,
+   "audio": 5,
+   "rewatch": 5,
+   "holdsUp": 5
+  }
+ },
  "533535": {
   "verdict": "may",
   "updatedAt": "2026-10-05T20:03:04.666Z",
