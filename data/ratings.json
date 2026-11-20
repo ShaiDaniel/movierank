@@ -1847,6 +1847,20 @@
    "holdsUp": 6
   }
  },
+ "1266": {
+  "verdict": "may",
+  "updatedAt": "2026-11-20T22:12:41.610Z",
+  "scores": {
+   "fun": 7,
+   "epic": 5,
+   "story": 7,
+   "acting": 8,
+   "visuals": 6,
+   "audio": 5,
+   "rewatch": 5,
+   "holdsUp": 6
+  }
+ },
  "1359": {
   "verdict": "shouldnot",
   "updatedAt": "2026-10-13T09:41:16.865Z",
@@ -5891,6 +5905,20 @@
    "visuals": 5,
    "audio": 4,
    "rewatch": 4,
+   "holdsUp": 5
+  }
+ },
+ "726209": {
+  "verdict": "may",
+  "updatedAt": "2026-11-20T22:13:29.417Z",
+  "scores": {
+   "fun": 7,
+   "epic": 4,
+   "story": 8,
+   "acting": 6,
+   "visuals": 6,
+   "audio": 5,
+   "rewatch": 5,
    "holdsUp": 5
   }
  },
