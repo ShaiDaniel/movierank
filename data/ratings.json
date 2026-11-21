@@ -274,6 +274,20 @@
   "updatedAt": "2026-10-01T11:02:19.147Z",
   "verdict": "must"
  },
+ "107": {
+  "verdict": "should",
+  "updatedAt": "2026-11-21T11:54:28.760Z",
+  "scores": {
+   "fun": 8,
+   "epic": 8,
+   "story": 7,
+   "acting": 8,
+   "visuals": 6,
+   "audio": 7,
+   "rewatch": 6,
+   "holdsUp": 6
+  }
+ },
  "115": {
   "verdict": "must",
   "updatedAt": "2026-10-05T13:01:33.059Z",
